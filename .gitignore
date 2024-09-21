@@ -1,0 +1,20 @@
+# Ignore o ambiente virtual
+.venv/
+# Para Windows, ignore também a pasta de ambiente padrão
+env/
+# Arquivos do Visual Studio Code
+.vscode/
+# Arquivos de cache do Python
+__pycache__/
+*.py[cod]
+# Arquivos temporários e logs
+*.log
+*.tmp
+# Ignore arquivos de planilhas Excel geradas ou temporárias
+*.xlsx
+*.xls
+# Arquivos de sistema do Mac e Windows
+.DS_Store
+Thumbs.db
+# Arquivo de dependências congeladas (se não quiser versionar)
+Pipfile.lock
