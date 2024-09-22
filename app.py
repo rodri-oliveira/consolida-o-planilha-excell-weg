@@ -37,18 +37,14 @@ def consolidar_planilhas(caminho_pasta, caminho_saida):
 
 # Função para gerar um relatório filtrado com base nos critérios
 def gerar_relatorio(dataframe, coluna, operador, valor):
-    # Verifica se a coluna contém valores numéricos
-    if pd.api.types.is_numeric_dtype(dataframe[coluna]):
-        # Aplica o filtro com base no operador escolhido
-        if operador == "maior que":
-            return dataframe[dataframe[coluna] > valor]
-        elif operador == "menor que":
-            return dataframe[dataframe[coluna] < valor]
-        elif operador == "igual a":
-            return dataframe[dataframe[coluna] == valor]
-    else:
-        messagebox.showwarning("Erro", f"A coluna {coluna} não contém valores numéricos. Escolha uma coluna válida.")
-        return pd.DataFrame()  # Retorna um DataFrame vazio caso não haja correspondência
+    # Aplica o filtro com base no operador escolhido
+    if operador == "maior que":
+        return dataframe[dataframe[coluna] > valor]
+    elif operador == "menor que":
+        return dataframe[dataframe[coluna] < valor]
+    elif operador == "igual a":
+        return dataframe[dataframe[coluna] == valor]
+    return pd.DataFrame()  # Retorna um DataFrame vazio caso não haja correspondência
 
 # Função para configurar a interface gráfica do usuário
 def consolidar_planilhas_interface():
