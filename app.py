@@ -88,7 +88,8 @@ def consolidar_planilhas_interface():
                 if relatorio.empty:
                     messagebox.showinfo("Resultado", "Nenhum dado encontrado para os critérios selecionados.")
                 else:
-                    caminho_saida = "C:/consolidar-planilha-weg/planilhas-consolidadas/relatorio.xlsx"  # Caminho do relatório gerado
+                    # Caminho do relatório gerado, alterado para o novo destino
+                    caminho_saida = "C:/consolidar-planilha-weg/relatórios/relatorio.xlsx"  
                     relatorio.to_excel(caminho_saida, index=False)  # Salva o relatório
                     messagebox.showinfo("Sucesso", f"Relatório gerado com sucesso em {caminho_saida}!")
             except ValueError:

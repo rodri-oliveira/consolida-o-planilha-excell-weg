@@ -11,8 +11,8 @@ __pycache__/
 *.log
 *.tmp
 # Ignore arquivos de planilhas Excel geradas ou temporárias
-*.xlsx
-*.xls
+#*.xlsx
+#*.xls
 # Arquivos de sistema do Mac e Windows
 .DS_Store
 Thumbs.db
