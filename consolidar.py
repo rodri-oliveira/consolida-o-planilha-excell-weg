@@ -19,30 +19,34 @@ def consolidar_planilhas(caminho_pasta, caminho_saida):
             # Itera sobre todas as abas (sheets) do Excel
             for sheet_name in xls.sheet_names:
                 dataframe_planilha = pd.read_excel(caminho_arquivo_excel, sheet_name=sheet_name)
-                lista_dataframes.append(dataframe_planilha)  # Adiciona cada sheet à lista de DataFrames
+                lista_dataframes.append(dataframe_planilha)
 
+    # Se houver planilhas carregadas, concatena e salva
     if lista_dataframes:
-        dataframe = pd.concat(lista_dataframes, ignore_index=True)  # Concatena todos os DataFrames
-        dataframe.to_excel(caminho_saida, index=False)  # Salva o DataFrame consolidado em um novo arquivo Excel
+        dataframe = pd.concat(lista_dataframes, ignore_index=True)
+        dataframe.to_excel(caminho_saida, index=False)
         print(f'Planilhas consolidadas com sucesso! Salvas em {caminho_saida}')
     else:
         print("Nenhuma planilha foi encontrada ou consolidada.")
 
-# Função para gerar relatório com base nos filtros aplicados
+# Função para gerar um relatório filtrado com base nos critérios
 def gerar_relatorio(dataframe, coluna, operador, valor):
     try:
+        if coluna not in dataframe.columns:
+            messagebox.showwarning("Erro", f"A coluna '{coluna}' não existe no DataFrame.")
+            return pd.DataFrame()  # Retorna um DataFrame vazio se a coluna não for encontrada
+
         # Converte a coluna para numérico, ignorando erros de conversão
         dataframe[coluna] = pd.to_numeric(dataframe[coluna], errors='coerce')
 
-        # Aplica o filtro de acordo com o operador escolhido
+        # Aplica o filtro com base no operador
         if operador == "maior que":
             return dataframe[dataframe[coluna] > valor]
         elif operador == "menor que":
             return dataframe[dataframe[coluna] < valor]
         elif operador == "igual a":
             return dataframe[dataframe[coluna] == valor]
-        else:
-            return pd.DataFrame()  # Retorna DataFrame vazio se o operador não for válido
+        return pd.DataFrame()  # Retorna um DataFrame vazio se não houver correspondência
     except Exception as e:
         messagebox.showwarning("Erro", f"Ocorreu um erro ao aplicar o filtro: {str(e)}")
         return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro

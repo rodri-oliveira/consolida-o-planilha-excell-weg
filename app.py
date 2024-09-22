@@ -37,14 +37,26 @@ def consolidar_planilhas(caminho_pasta, caminho_saida):
 
 # Função para gerar um relatório filtrado com base nos critérios
 def gerar_relatorio(dataframe, coluna, operador, valor):
-    # Aplica o filtro com base no operador escolhido
-    if operador == "maior que":
-        return dataframe[dataframe[coluna] > valor]
-    elif operador == "menor que":
-        return dataframe[dataframe[coluna] < valor]
-    elif operador == "igual a":
-        return dataframe[dataframe[coluna] == valor]
-    return pd.DataFrame()  # Retorna um DataFrame vazio caso não haja correspondência
+    try:
+        # Verifica se a coluna existe
+        if coluna not in dataframe.columns:
+            messagebox.showwarning("Erro", f"A coluna '{coluna}' não existe no DataFrame.")
+            return pd.DataFrame()  # Retorna um DataFrame vazio se a coluna não for encontrada
+
+        # Converte a coluna para numérico, ignorando erros de conversão
+        dataframe[coluna] = pd.to_numeric(dataframe[coluna], errors='coerce')
+
+        # Aplica o filtro com base no operador escolhido
+        if operador == "maior que":
+            return dataframe[dataframe[coluna] > valor]
+        elif operador == "menor que":
+            return dataframe[dataframe[coluna] < valor]
+        elif operador == "igual a":
+            return dataframe[dataframe[coluna] == valor]
+        return pd.DataFrame()  # Retorna um DataFrame vazio caso não haja correspondência
+    except Exception as e:
+        messagebox.showwarning("Erro", f"Ocorreu um erro ao aplicar o filtro: {str(e)}")
+        return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro
 
 # Função para configurar a interface gráfica do usuário
 def consolidar_planilhas_interface():
