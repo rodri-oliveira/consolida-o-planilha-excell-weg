@@ -24,6 +24,12 @@ def consolidar_planilhas(caminho_pasta, caminho_saida):
     # Se houver planilhas carregadas, concatena e salva
     if lista_dataframes:
         dataframe = pd.concat(lista_dataframes, ignore_index=True)
+
+        # Verifica e imprime as colunas do DataFrame consolidado
+        print("Colunas do DataFrame consolidado:", dataframe.columns.tolist())
+
+        # Define o caminho de saída para as planilhas consolidadas
+        caminho_saida = "C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
         dataframe.to_excel(caminho_saida, index=False)
         print(f'Planilhas consolidadas com sucesso! Salvas em {caminho_saida}')
     else:
