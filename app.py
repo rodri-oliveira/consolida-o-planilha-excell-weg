@@ -30,7 +30,11 @@ def consolidar_planilhas(caminho_pasta):
         dataframe = pd.concat(lista_dataframes, ignore_index=True)
         
         # Caminho de saída para a planilha consolidada
+<<<<<<< HEAD
         caminho_saida = "C:/Users/rodri/OneDrive/Área de Trabalho/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
+=======
+        caminho_saida = "C:/Users/roliveira/Desktop/Evandro/Mari/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
+>>>>>>> 6fb6f02ffa78154ca29c6a10547c683986b3db03
         
         # Verifica se o diretório existe, se não, cria
         os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
@@ -95,7 +99,11 @@ def consolidar_planilhas_interface():
                     messagebox.showinfo("Resultado", "Nenhum dado encontrado para os critérios selecionados.")
                 else:
                     # Caminho do relatório gerado
+<<<<<<< HEAD
                     caminho_saida = "C:/Users/rodri/OneDrive/Área de Trabalho/consolidar-planilha-weg/relatórios/relatorio.xlsx"
+=======
+                    caminho_saida = "C:/Users/roliveira/Desktop/Evandro/Mari/consolida-o-planilha-excell-weg/relatórios/relatorio.xlsx"
+>>>>>>> 6fb6f02ffa78154ca29c6a10547c683986b3db03
                     os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)  # Cria o diretório se não existir
                     relatorio.to_excel(caminho_saida, index=False)  # Salva o relatório
                     messagebox.showinfo("Sucesso", f"Relatório gerado com sucesso em {caminho_saida}!")
