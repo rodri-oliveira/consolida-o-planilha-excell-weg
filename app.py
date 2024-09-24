@@ -165,5 +165,4 @@ def consolidar_planilhas_interface():
     # Inicia o loop da interface gráfica
     janela.mainloop()
 
-# Chamada da função para iniciar a interface
-consolidar_planilhas_interface()
+
