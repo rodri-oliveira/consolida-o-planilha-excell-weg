@@ -7,7 +7,7 @@ from tkinter import messagebox, ttk, filedialog
 dataframe = None
 
 # Função responsável por consolidar as planilhas
-def consolidar_planilhas(caminho_pasta):
+def consolidar_planilhas(caminho_pasta, caminho_saida):
     global dataframe  # Define o DataFrame como global para ser usado em outras funções
     lista_dataframes = []  # Lista que armazenará os DataFrames de cada planilha
 
@@ -30,11 +30,7 @@ def consolidar_planilhas(caminho_pasta):
         dataframe = pd.concat(lista_dataframes, ignore_index=True)
         
         # Caminho de saída para a planilha consolidada
-<<<<<<< HEAD
-        caminho_saida = "C:/Users/rodri/OneDrive/Área de Trabalho/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
-=======
-        caminho_saida = "C:/Users/roliveira/Desktop/Evandro/Mari/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
->>>>>>> 6fb6f02ffa78154ca29c6a10547c683986b3db03
+        caminho_saida = "C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
         
         # Verifica se o diretório existe, se não, cria
         os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
@@ -74,7 +70,7 @@ def consolidar_planilhas_interface():
     # Função para consolidar as planilhas
     def consolidar():
         caminho_pasta = entrada_pasta.get()  # Obtém o caminho da pasta digitado pelo usuário
-        consolidar_planilhas(caminho_pasta)  # Chama a função de consolidação
+        consolidar_planilhas(caminho_pasta, None)  # Chama a função de consolidação
 
         # Atualiza o combobox com os nomes das colunas
         if dataframe is not None:
@@ -99,14 +95,16 @@ def consolidar_planilhas_interface():
                     messagebox.showinfo("Resultado", "Nenhum dado encontrado para os critérios selecionados.")
                 else:
                     # Caminho do relatório gerado
-<<<<<<< HEAD
-                    caminho_saida = "C:/Users/rodri/OneDrive/Área de Trabalho/consolidar-planilha-weg/relatórios/relatorio.xlsx"
-=======
-                    caminho_saida = "C:/Users/roliveira/Desktop/Evandro/Mari/consolida-o-planilha-excell-weg/relatórios/relatorio.xlsx"
->>>>>>> 6fb6f02ffa78154ca29c6a10547c683986b3db03
-                    os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)  # Cria o diretório se não existir
-                    relatorio.to_excel(caminho_saida, index=False)  # Salva o relatório
-                    messagebox.showinfo("Sucesso", f"Relatório gerado com sucesso em {caminho_saida}!")
+                    caminho_saida = "C:/consolidar-planilha-weg/relatórios/relatorio.xlsx"
+                    
+                    # Verifica se o diretório existe, se não, cria
+                    os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
+
+                    try:
+                        relatorio.to_excel(caminho_saida, index=False)  # Salva o relatório
+                        messagebox.showinfo("Sucesso", f"Relatório gerado com sucesso em {caminho_saida}!")
+                    except Exception as e:
+                        messagebox.showwarning("Erro", f"Ocorreu um erro ao salvar o relatório: {str(e)}")
             except ValueError:
                 messagebox.showwarning("Erro", "Insira um valor numérico válido.")  # Mensagem de erro para valor inválido
         else:
