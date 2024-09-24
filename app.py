@@ -7,7 +7,7 @@ from tkinter import messagebox, ttk, filedialog
 dataframe = None
 
 # Função responsável por consolidar as planilhas
-def consolidar_planilhas(caminho_pasta, caminho_saida):
+def consolidar_planilhas(caminho_pasta):
     global dataframe  # Define o DataFrame como global para ser usado em outras funções
     lista_dataframes = []  # Lista que armazenará os DataFrames de cada planilha
 
@@ -28,6 +28,13 @@ def consolidar_planilhas(caminho_pasta, caminho_saida):
     if lista_dataframes:
         # Concatena todas as planilhas em um único DataFrame
         dataframe = pd.concat(lista_dataframes, ignore_index=True)
+        
+        # Caminho de saída para a planilha consolidada
+        caminho_saida = "C:/Users/rodri/OneDrive/Área de Trabalho/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
+        
+        # Verifica se o diretório existe, se não, cria
+        os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
+
         # Salva o DataFrame consolidado em um arquivo Excel
         dataframe.to_excel(caminho_saida, index=False)
         print(f'Planilhas consolidadas com sucesso! Salvas em {caminho_saida}')
@@ -63,8 +70,7 @@ def consolidar_planilhas_interface():
     # Função para consolidar as planilhas
     def consolidar():
         caminho_pasta = entrada_pasta.get()  # Obtém o caminho da pasta digitado pelo usuário
-        caminho_saida = "C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx"  # Define o caminho de saída
-        consolidar_planilhas(caminho_pasta, caminho_saida)  # Chama a função de consolidação
+        consolidar_planilhas(caminho_pasta)  # Chama a função de consolidação
 
         # Atualiza o combobox com os nomes das colunas
         if dataframe is not None:
@@ -88,8 +94,9 @@ def consolidar_planilhas_interface():
                 if relatorio.empty:
                     messagebox.showinfo("Resultado", "Nenhum dado encontrado para os critérios selecionados.")
                 else:
-                    # Caminho do relatório gerado, alterado para o novo destino
-                    caminho_saida = "C:/consolidar-planilha-weg/relatórios/relatorio.xlsx"  
+                    # Caminho do relatório gerado
+                    caminho_saida = "C:/Users/rodri/OneDrive/Área de Trabalho/consolidar-planilha-weg/relatórios/relatorio.xlsx"
+                    os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)  # Cria o diretório se não existir
                     relatorio.to_excel(caminho_saida, index=False)  # Salva o relatório
                     messagebox.showinfo("Sucesso", f"Relatório gerado com sucesso em {caminho_saida}!")
             except ValueError:
@@ -151,3 +158,6 @@ def consolidar_planilhas_interface():
 
     # Inicia o loop da interface gráfica
     janela.mainloop()
+
+# Chamada da função para iniciar a interface
+consolidar_planilhas_interface()
