@@ -1,58 +1,70 @@
-import os
-import pandas as pd
-from tkinter import messagebox
+import os  # Importa o módulo para interagir com o sistema operacional
+import pandas as pd  # Importa a biblioteca pandas para manipulação de dados
 
-# Variável global para armazenar o DataFrame consolidado
-dataframe = None
+def consolidar_planilhas(caminho_pasta_origem):
+    """
+    Consolida todas as planilhas em arquivos Excel (.xlsx) de uma pasta em um único DataFrame.
 
-# Função para consolidar as planilhas
-def consolidar_planilhas(caminho_pasta, caminho_saida):
-    global dataframe
-    lista_dataframes = []
+    Args:
+        caminho_pasta_origem (str): Caminho da pasta contendo os arquivos Excel.
 
-    # Itera sobre todos os arquivos da pasta especificada
-    for nome_arquivo in os.listdir(caminho_pasta):
-        if nome_arquivo.endswith('.xlsx'):  # Verifica se o arquivo é um Excel
-            caminho_arquivo_excel = os.path.join(caminho_pasta, nome_arquivo)
-            xls = pd.ExcelFile(caminho_arquivo_excel)  # Carrega o arquivo Excel
+    Returns:
+        pd.DataFrame: DataFrame consolidado com os dados de todas as planilhas.
+    """
+    lista_dataframes = []  # Lista para armazenar os DataFrames das planilhas
 
-            # Itera sobre todas as abas (sheets) do Excel
-            for sheet_name in xls.sheet_names:
-                dataframe_planilha = pd.read_excel(caminho_arquivo_excel, sheet_name=sheet_name)
-                lista_dataframes.append(dataframe_planilha)
-
-    # Se houver planilhas carregadas, concatena e salva
-    if lista_dataframes:
-        dataframe = pd.concat(lista_dataframes, ignore_index=True)
-
-        # Verifica e imprime as colunas do DataFrame consolidado
-        print("Colunas do DataFrame consolidado:", dataframe.columns.tolist())
-
-        # Define o caminho de saída para as planilhas consolidadas
-        caminho_saida = "C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
-        dataframe.to_excel(caminho_saida, index=False)
-        print(f'Planilhas consolidadas com sucesso! Salvas em {caminho_saida}')
-    else:
-        print("Nenhuma planilha foi encontrada ou consolidada.")
-
-# Função para gerar um relatório filtrado com base nos critérios
-def gerar_relatorio(dataframe, coluna, operador, valor):
     try:
-        if coluna not in dataframe.columns:
-            messagebox.showwarning("Erro", f"A coluna '{coluna}' não existe no DataFrame.")
-            return pd.DataFrame()  # Retorna um DataFrame vazio se a coluna não for encontrada
+        # Itera sobre todos os arquivos na pasta de origem
+        for nome_arquivo in os.listdir(caminho_pasta_origem):
+            # Verifica se o arquivo é um arquivo Excel
+            if nome_arquivo.endswith('.xlsx'):
+                # Cria o caminho completo do arquivo Excel
+                caminho_arquivo_excel = os.path.join(caminho_pasta_origem, nome_arquivo)
+                xls = pd.ExcelFile(caminho_arquivo_excel)  # Lê o arquivo Excel
 
-        # Converte a coluna para numérico, ignorando erros de conversão
-        dataframe[coluna] = pd.to_numeric(dataframe[coluna], errors='coerce')
+                # Itera sobre todas as abas do arquivo
+                for nome_aba in xls.sheet_names:
+                    # Lê a aba e armazena o DataFrame na lista
+                    dataframe_aba = pd.read_excel(caminho_arquivo_excel, sheet_name=nome_aba)
+                    lista_dataframes.append(dataframe_aba)
 
-        # Aplica o filtro com base no operador
-        if operador == "maior que":
-            return dataframe[dataframe[coluna] > valor]
-        elif operador == "menor que":
-            return dataframe[dataframe[coluna] < valor]
-        elif operador == "igual a":
-            return dataframe[dataframe[coluna] == valor]
-        return pd.DataFrame()  # Retorna um DataFrame vazio se não houver correspondência
+        # Verifica se há DataFrames para consolidar
+        if lista_dataframes:
+            # Concatena todos os DataFrames em um único DataFrame
+            dataframe_consolidado = pd.concat(lista_dataframes, ignore_index=True)
+            return dataframe_consolidado  # Retorna o DataFrame consolidado
+        else:
+            print("Nenhuma planilha foi encontrada ou consolidada.")
+            return pd.DataFrame()  # Retorna um DataFrame vazio
+
+    except FileNotFoundError:
+        print(f"O caminho '{caminho_pasta_origem}' não foi encontrado.")
+        return pd.DataFrame()  # Retorna um DataFrame vazio
+    except pd.errors.EmptyDataError:
+        print("Um dos arquivos Excel está vazio.")
+        return pd.DataFrame()  # Retorna um DataFrame vazio
     except Exception as e:
-        messagebox.showwarning("Erro", f"Ocorreu um erro ao aplicar o filtro: {str(e)}")
-        return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro
+        print(f"Ocorreu um erro ao consolidar as planilhas: {str(e)}")
+        return pd.DataFrame()  # Retorna um DataFrame vazio
+
+def salvar_planilha(dataframe, caminho_saida):
+    """
+    Salva um DataFrame em um arquivo Excel.
+
+    Args:
+        dataframe (pd.DataFrame): DataFrame a ser salvo.
+        caminho_saida (str): Caminho do arquivo de saída onde o DataFrame será salvo.
+
+    Returns:
+        None
+    """
+    try:
+        # Cria a pasta de saída se não existir
+        os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
+        # Salva o DataFrame em um arquivo Excel
+        dataframe.to_excel(caminho_saida, index=False)
+        print(f'Planilha salva em: {caminho_saida}')
+    except FileNotFoundError:
+        print("O caminho para salvar a planilha não foi encontrado.")
+    except Exception as e:
+        print(f"Ocorreu um erro ao salvar a planilha: {str(e)}")
