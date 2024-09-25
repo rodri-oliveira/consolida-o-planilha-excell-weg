@@ -6,7 +6,7 @@ def consolidar_planilhas(caminho_das_planilhas):
     """
     Consolida todas as planilhas de todos os arquivos Excel no diretório especificado,
     criando colunas específicas como MÊS, ANO, Epic, Status, Due Date, Assignee e horas.
-
+    
     Parâmetros:
     caminho_das_planilhas (str): Caminho do diretório onde estão as planilhas a serem consolidadas.
     """
@@ -24,31 +24,44 @@ def consolidar_planilhas(caminho_das_planilhas):
 
             # Itera sobre todas as abas do arquivo Excel
             for nome_aba in xls.sheet_names:
+                # Verifica se a aba é "Backlog"
+                if nome_aba == "Backlog":
+                    print(f"Aba '{nome_aba}' do arquivo {arquivo} foi ignorada.")
+                    continue  # Pula para a próxima aba
+
                 df = pd.read_excel(xls, sheet_name=nome_aba)
 
                 # Verifica se o DataFrame contém as colunas necessárias
                 if 'Planned effort' in df.columns:
-                    # Criação das colunas 'MÊS' e 'ANO'
-                    df['MÊS'] = df.columns[8]  # Coluna 'I' corresponde ao índice 8
-                    df['ANO'] = df.columns[0]  # Coluna 'A' corresponde ao índice 0
+                    # Loop para preencher os meses e anos
+                    for index, row in df.iterrows():
+                        epic = row['Epic'] if 'Epic' in df.columns else ''
+                        status = row['Status'] if 'Status' in df.columns else ''
+                        due_date = row['Due Date'] if 'Due Date' in df.columns else ''
+                        assignee = row['Assignee'] if 'Assignee' in df.columns else ''
+                        planned_effort = row['Planned effort']
 
-                    # Seleciona as colunas necessárias para o formato final
-                    colunas_necessarias = ['Epic', 'Status', 'Due Date', 'Assignee', 'Planned effort', 'MÊS', 'ANO']
-                    
-                    if all(col in df.columns for col in colunas_necessarias):
-                        # Renomeia a coluna 'Planned effort' para 'horas'
-                        df = df[colunas_necessarias].rename(columns={'Planned effort': 'horas'})
+                        # Adiciona uma linha para cada mês do ano
+                        for mes in ["agosto", "setembro", "outubro", "novembro", "dezembro", "janeiro", 
+                                    "fevereiro", "março", "abril", "maio", "junho", "julho"]:
+                            ano = 2024 if mes in ["agosto", "setembro", "outubro", "novembro", "dezembro"] else 2025
+                            nova_linha = {
+                                'Epic': epic,
+                                'Status': status,
+                                'Due Date': due_date,
+                                'Assignee': assignee,
+                                'horas': planned_effort,
+                                'MÊS': mes,
+                                'ANO': ano
+                            }
+                            lista_dfs.append(nova_linha)
 
-                        # Adiciona o DataFrame à lista de DataFrames a serem consolidados
-                        lista_dfs.append(df)
-                    else:
-                        print(f"Aba {nome_aba} do arquivo {arquivo} não contém todas as colunas esperadas.")
                 else:
                     print(f"Aba {nome_aba} do arquivo {arquivo} não contém a coluna 'Planned effort'.")
 
-    # Concatena todos os DataFrames da lista em um único DataFrame consolidado
+    # Cria um DataFrame a partir da lista de dicionários
     if lista_dfs:
-        dataframe_consolidado = pd.concat(lista_dfs, ignore_index=True)
+        dataframe_consolidado = pd.DataFrame(lista_dfs)
 
         # Salvando o DataFrame consolidado no caminho especificado
         caminho_para_salvar_arquivo = 'C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
