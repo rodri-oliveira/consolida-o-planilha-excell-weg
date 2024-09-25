@@ -25,7 +25,7 @@ def consolidar_planilhas(caminho_pasta_origem):
 
         if lista_dataframes:
             dataframe_consolidado = pd.concat(lista_dataframes, ignore_index=True)
-            caminho_saida = "C:/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
+            caminho_saida = "C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
             os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
             dataframe_consolidado.to_excel(caminho_saida, index=False)
             print(f'Planilhas consolidadas com sucesso! Salvas em {caminho_saida}')
@@ -34,6 +34,8 @@ def consolidar_planilhas(caminho_pasta_origem):
     
     except FileNotFoundError:
         messagebox.showwarning("Erro", f"O caminho '{caminho_pasta_origem}' não foi encontrado.")
+    except PermissionError:
+        messagebox.showwarning("Erro", f"Você não tem permissão para acessar o arquivo: '{caminho_arquivo_excel}'.")
     except pd.errors.EmptyDataError:
         messagebox.showwarning("Erro", "Um dos arquivos Excel está vazio.")
     except Exception as e:
