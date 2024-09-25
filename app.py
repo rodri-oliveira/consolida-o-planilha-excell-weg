@@ -30,7 +30,7 @@ def consolidar_planilhas(caminho_pasta_origem, caminho_saida):
             dataframe_consolidado = pd.concat(lista_dataframes, ignore_index=True)
 
             # Define o caminho para salvar o DataFrame consolidado
-            caminho_saida = "C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
+            caminho_saida = "C:/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
             # Cria os diretórios necessários, se não existirem
             os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
             # Salva o DataFrame consolidado em um arquivo Excel
@@ -106,7 +106,7 @@ def consolidar_planilhas_interface():
                     messagebox.showinfo("Resultado", "Nenhum dado encontrado para os critérios selecionados.")
                 else:
                     # Define o caminho para salvar o relatório gerado
-                    caminho_saida_relatorio = "C:/consolidar-planilha-weg/relatórios/relatorio.xlsx"
+                    caminho_saida_relatorio = "C:/consolida-o-planilha-excell-weg/relatórios/relatorio.xlsx"
                     # Cria os diretórios necessários, se não existirem
                     os.makedirs(os.path.dirname(caminho_saida_relatorio), exist_ok=True)
 
