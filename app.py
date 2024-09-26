@@ -127,7 +127,7 @@ def consolidar_planilhas(caminho_das_planilhas):
                 # Verifica se o DataFrame contém as colunas necessárias
                 if 'Planned effort' in df.columns and df.shape[1] > 5:
                     for index, row in df.iterrows():
-                        if index < 0:  # Ignora as primeiras 4 linhas
+                        if index < 0:  # Ignora as primeiras linhas (ajuste conforme necessário)
                             continue
 
                         # Captura os dados relevantes
@@ -137,12 +137,20 @@ def consolidar_planilhas(caminho_das_planilhas):
                         planned_effort = row['Planned effort']
                         estimate_effort = row.iloc[5] if len(row) > 5 else None
 
-                        # Verifique se as colunas de I a Y estão presentes no DataFrame
-                        colunas_meses = df.columns[8:25]
+                        # Localiza as colunas de meses dinamicamente (todas as colunas que vêm após a coluna 'Estimate Effort')
+                        colunas_meses = df.columns[8:]  # Assume que as primeiras 8 colunas são fixas
+
+                        # Filtrar linhas com valores inválidos (ex.: 'GAP' ou números aleatórios)
+                        if pd.isnull(planned_effort) or epic == '' or status == '':
+                            continue  # Pula se os dados essenciais estiverem faltando
 
                         for idx, mes in enumerate(colunas_meses):
                             valor_hora_mes = row[mes]
-                            ano = 2024 if idx < 5 else 2025
+                            ano = 2024 if idx < 5 else 2025  # Ajuste conforme o número de meses no arquivo
+
+                            # Verifica se o valor da célula é válido e se é numérico
+                            if pd.isnull(valor_hora_mes) or not isinstance(valor_hora_mes, (int, float)):
+                                continue
 
                             nova_linha = {
                                 'Epic': epic,
@@ -172,3 +180,5 @@ def consolidar_planilhas(caminho_das_planilhas):
         print(f"Relatório consolidado salvo em: {caminho_para_salvar_arquivo}")
     else:
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
+
+
