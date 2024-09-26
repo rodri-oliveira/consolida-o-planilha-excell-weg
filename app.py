@@ -9,6 +9,8 @@ from consolidar import consolidar_planilhas  # Importa a função consolidar_pla
 dataframe_consolidado = None
 
 def consolidar_planilhas_interface():
+    global dataframe_consolidado  # Permite que a variável seja modificada dentro da função
+
     def consolidar():
         caminho_pasta_origem = entrada_pasta.get()
         consolidar_planilhas(caminho_pasta_origem)  # Chama a função consolidar_planilhas
@@ -53,9 +55,11 @@ def consolidar_planilhas_interface():
         operador_combobox.set('')
         valor_entry.delete(0, tk.END)
 
+    # Criação da janela principal
     janela_principal = tk.Tk()
     janela_principal.title("Consolidar Planilhas")
 
+    # Interface de seleção de pasta e comandos
     tk.Label(janela_principal, text="Caminho da pasta:").pack()
     entrada_pasta = tk.Entry(janela_principal, width=50)
     entrada_pasta.pack()
@@ -66,6 +70,7 @@ def consolidar_planilhas_interface():
     botao_consolidar = tk.Button(janela_principal, text="Consolidar", command=consolidar)
     botao_consolidar.pack()
 
+    # Seletor de colunas, operadores e valor para filtrar o relatório
     tk.Label(janela_principal, text="Selecione uma coluna:").pack()
     coluna_combobox = ttk.Combobox(janela_principal)
     coluna_combobox.pack()
@@ -78,10 +83,13 @@ def consolidar_planilhas_interface():
     valor_entry = tk.Entry(janela_principal)
     valor_entry.pack()
 
+    # Botões para gerar relatório e limpar a busca
     botao_gerar_relatorio = tk.Button(janela_principal, text="Gerar Relatório", command=gerar_relatorio_callback)
     botao_gerar_relatorio.pack()
 
     botao_nova_busca = tk.Button(janela_principal, text="Nova Busca", command=nova_busca)
     botao_nova_busca.pack()
 
+    # Inicia a interface
     janela_principal.mainloop()
+
