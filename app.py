@@ -1,3 +1,4 @@
+# app.py
 # Importa as bibliotecas necessárias
 import os
 import pandas as pd
@@ -108,7 +109,7 @@ def consolidar_planilhas_interface():
 def consolidar_planilhas(caminho_das_planilhas):
     """
     Consolida todas as planilhas de todos os arquivos Excel no diretório especificado,
-    criando colunas específicas como MÊS, ANO, Epic, Status, Due Date, Assignee e Planned Effort.
+    criando colunas específicas como MÊS, ANO, Epic, Status, Due Date, Assignee, Planned Effort e Estimate Effort.
     
     Parâmetros:
     caminho_das_planilhas (str): Caminho do diretório onde estão as planilhas a serem consolidadas.
@@ -135,7 +136,7 @@ def consolidar_planilhas(caminho_das_planilhas):
                 df = pd.read_excel(xls, sheet_name=nome_aba)
 
                 # Verifica se o DataFrame contém as colunas necessárias
-                if 'Planned effort' in df.columns:
+                if 'Planned effort' in df.columns and df.shape[1] > 5:  # Verifica se a coluna F existe
                     # Loop para preencher os meses e anos
                     for index, row in df.iterrows():
                         epic = row['Epic'] if 'Epic' in df.columns else ''
@@ -143,6 +144,7 @@ def consolidar_planilhas(caminho_das_planilhas):
                         due_date = row['Due Date'] if 'Due Date' in df.columns else ''
                         assignee = row['Assignee'] if 'Assignee' in df.columns else ''
                         planned_effort = row['Planned effort']
+                        estimate_effort = row.iloc[5] if len(row) > 5 else None  # Captura o valor da coluna F (índice 5)
 
                         # Verifique se as colunas de I a Y estão presentes no DataFrame
                         colunas_meses = df.columns[8:25]  # I até Y (colunas 9 até 25)
@@ -159,6 +161,7 @@ def consolidar_planilhas(caminho_das_planilhas):
                                 'Due Date': due_date,
                                 'Assignee': assignee,
                                 'Planned Effort': planned_effort,  # A coluna "Planned Effort"
+                                'Estimate Effort': estimate_effort,  # A nova coluna "Estimate Effort"
                                 'MÊS': mes,
                                 'ANO': ano,
                                 'Horas mês': valor_hora_mes  # Valor das horas do mês correspondente (I5 até Y5)
@@ -166,14 +169,11 @@ def consolidar_planilhas(caminho_das_planilhas):
                             lista_dfs.append(nova_linha)
 
                 else:
-                    print(f"Aba {nome_aba} do arquivo {arquivo} não contém a coluna 'Planned effort'.")
+                    print(f"Aba {nome_aba} do arquivo {arquivo} não contém a coluna 'Planned effort' ou não possui colunas suficientes.")
 
     # Cria um DataFrame a partir da lista de dicionários
     if lista_dfs:
         dataframe_consolidado = pd.DataFrame(lista_dfs)
-
-        # Renomear a coluna "horas" para "Planned Effort"
-        dataframe_consolidado.rename(columns={'horas': 'Planned Effort'}, inplace=True)
 
         # Salvando o DataFrame consolidado no caminho especificado
         caminho_para_salvar_arquivo = 'C:/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
