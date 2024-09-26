@@ -3,65 +3,15 @@ import os
 import pandas as pd
 import tkinter as tk
 from tkinter import messagebox, ttk, filedialog
+from consolidar import consolidar_planilhas  # Importa a função consolidar_planilhas do arquivo consolidar.py
 
 # Variável global para armazenar o DataFrame consolidado
 dataframe_consolidado = None
 
-def consolidar_planilhas(caminho_pasta_origem):
-    global dataframe_consolidado
-    lista_dataframes = []
-
-    try:
-        # Itera sobre todos os arquivos na pasta de origem
-        for nome_arquivo in os.listdir(caminho_pasta_origem):
-            if nome_arquivo.endswith('.xlsx'):
-                caminho_arquivo_excel = os.path.join(caminho_pasta_origem, nome_arquivo)
-                xls = pd.ExcelFile(caminho_arquivo_excel)
-
-                # Itera sobre todas as abas de cada arquivo Excel
-                for nome_aba in xls.sheet_names:
-                    dataframe_aba = pd.read_excel(caminho_arquivo_excel, sheet_name=nome_aba)
-                    lista_dataframes.append(dataframe_aba)
-
-        if lista_dataframes:
-            dataframe_consolidado = pd.concat(lista_dataframes, ignore_index=True)
-            caminho_saida = "C:/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx"
-            os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
-            dataframe_consolidado.to_excel(caminho_saida, index=False)
-            print(f'Planilhas consolidadas com sucesso! Salvas em {caminho_saida}')
-        else:
-            print("Nenhuma planilha foi encontrada ou consolidada.")
-    
-    except FileNotFoundError:
-        messagebox.showwarning("Erro", f"O caminho '{caminho_pasta_origem}' não foi encontrado.")
-    except pd.errors.EmptyDataError:
-        messagebox.showwarning("Erro", "Um dos arquivos Excel está vazio.")
-    except Exception as e:
-        messagebox.showwarning("Erro", f"Ocorreu um erro: {str(e)}")
-
-def gerar_relatorio(dataframe, nome_coluna, operador, valor):
-    try:
-        if nome_coluna not in dataframe.columns:
-            messagebox.showwarning("Erro", f"A coluna '{nome_coluna}' não existe no DataFrame.")
-            return pd.DataFrame()
-
-        dataframe[nome_coluna] = pd.to_numeric(dataframe[nome_coluna], errors='coerce')
-
-        if operador == "maior que":
-            return dataframe[dataframe[nome_coluna] > valor]
-        elif operador == "menor que":
-            return dataframe[dataframe[nome_coluna] < valor]
-        elif operador == "igual a":
-            return dataframe[dataframe[nome_coluna] == valor]
-        return pd.DataFrame()
-    except Exception as e:
-        messagebox.showwarning("Erro", f"Ocorreu um erro ao aplicar o filtro: {str(e)}")
-        return pd.DataFrame()
-
 def consolidar_planilhas_interface():
     def consolidar():
         caminho_pasta_origem = entrada_pasta.get()
-        consolidar_planilhas(caminho_pasta_origem)
+        consolidar_planilhas(caminho_pasta_origem)  # Chama a função consolidar_planilhas
 
         if dataframe_consolidado is not None:
             coluna_combobox['values'] = dataframe_consolidado.columns.tolist()
@@ -81,7 +31,7 @@ def consolidar_planilhas_interface():
                 if relatorio_filtrado.empty:
                     messagebox.showinfo("Resultado", "Nenhum dado encontrado para os critérios selecionados.")
                 else:
-                    caminho_saida_relatorio = "C:/consolida-o-planilha-excell-weg/relatórios/relatorio.xlsx"
+                    caminho_saida_relatorio = "C:/consolidar-planilha-weg/relatorios/relatorio.xlsx"
                     os.makedirs(os.path.dirname(caminho_saida_relatorio), exist_ok=True)
 
                     relatorio_filtrado.to_excel(caminho_saida_relatorio, index=False)
