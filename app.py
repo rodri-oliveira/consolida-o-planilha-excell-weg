@@ -1,5 +1,4 @@
 # app.py
-# Importa as bibliotecas necessárias
 import os
 import pandas as pd
 import tkinter as tk
@@ -21,11 +20,11 @@ def gerar_relatorio(dataframe, nome_coluna, operador, valor):
         raise ValueError("Operador desconhecido.")
 
 def consolidar_planilhas_interface():
-    global dataframe_consolidado  # Permite que a variável seja modificada dentro da função
+    global dataframe_consolidado
 
     def consolidar():
         caminho_pasta_origem = entrada_pasta.get()
-        consolidar_planilhas(caminho_pasta_origem)  # Chama a função consolidar_planilhas
+        consolidar_planilhas(caminho_pasta_origem)
 
         if dataframe_consolidado is not None:
             coluna_combobox['values'] = dataframe_consolidado.columns.tolist()
@@ -107,73 +106,63 @@ def consolidar_planilhas_interface():
 
 # Função para consolidar as planilhas
 def consolidar_planilhas(caminho_das_planilhas):
-    """
-    Consolida todas as planilhas de todos os arquivos Excel no diretório especificado,
-    criando colunas específicas como MÊS, ANO, Epic, Status, Due Date, Assignee, Planned Effort e Estimate Effort.
-    
-    Parâmetros:
-    caminho_das_planilhas (str): Caminho do diretório onde estão as planilhas a serem consolidadas.
-    """
-
+    """Consolida todas as planilhas de todos os arquivos Excel no diretório especificado."""
     global dataframe_consolidado
     lista_dfs = []
 
     # Loop para percorrer todos os arquivos no diretório de planilhas
     for arquivo in os.listdir(caminho_das_planilhas):
-        if arquivo.endswith('.xlsx'):  # Verifica se o arquivo tem a extensão correta
+        if arquivo.endswith('.xlsx'):
             caminho_completo = os.path.join(caminho_das_planilhas, arquivo)
-            
-            # Carrega o arquivo Excel
             xls = pd.ExcelFile(caminho_completo)
 
             # Itera sobre todas as abas do arquivo Excel
             for nome_aba in xls.sheet_names:
-                # Verifica se a aba é "Backlog"
                 if nome_aba == "Backlog":
                     print(f"Aba '{nome_aba}' do arquivo {arquivo} foi ignorada.")
-                    continue  # Pula para a próxima aba
+                    continue
 
                 df = pd.read_excel(xls, sheet_name=nome_aba)
 
                 # Verifica se o DataFrame contém as colunas necessárias
-                if 'Planned effort' in df.columns and df.shape[1] > 5:  # Verifica se a coluna F existe
-                    # Loop para preencher os meses e anos
+                if 'Planned effort' in df.columns and df.shape[1] > 5:
                     for index, row in df.iterrows():
+                        if index < 3:  # Ignora as primeiras 4 linhas
+                            continue
+
+                        # Captura os dados relevantes
                         epic = row['Epic'] if 'Epic' in df.columns else ''
                         status = row['Status'] if 'Status' in df.columns else ''
                         due_date = row['Due Date'] if 'Due Date' in df.columns else ''
-                        assignee = row['Assignee'] if 'Assignee' in df.columns else ''
                         planned_effort = row['Planned effort']
-                        estimate_effort = row.iloc[5] if len(row) > 5 else None  # Captura o valor da coluna F (índice 5)
+                        estimate_effort = row.iloc[5] if len(row) > 5 else None
 
                         # Verifique se as colunas de I a Y estão presentes no DataFrame
-                        colunas_meses = df.columns[8:25]  # I até Y (colunas 9 até 25)
+                        colunas_meses = df.columns[8:25]
 
-                        # Adiciona uma linha para cada mês de agosto de 2024 até dezembro de 2025
                         for idx, mes in enumerate(colunas_meses):
-                            valor_hora_mes = row[mes]  # Pegando o valor da célula para o mês correspondente
-
-                            ano = 2024 if idx < 5 else 2025  # Determina o ano: 2024 para os primeiros 5 meses, depois 2025
+                            valor_hora_mes = row[mes]
+                            ano = 2024 if idx < 5 else 2025
 
                             nova_linha = {
                                 'Epic': epic,
                                 'Status': status,
                                 'Due Date': due_date,
-                                'Assignee': assignee,
-                                'Planned Effort': planned_effort,  # A coluna "Planned Effort"
-                                'Estimate Effort': estimate_effort,  # A nova coluna "Estimate Effort"
+                                'Assignee': row['Assignee'] if 'Assignee' in df.columns else '',
+                                'Planned Effort': planned_effort,
+                                'Estimate Effort': estimate_effort,
                                 'MÊS': mes,
                                 'ANO': ano,
-                                'Horas mês': valor_hora_mes  # Valor das horas do mês correspondente (I5 até Y5)
+                                'Horas mês': valor_hora_mes
                             }
                             lista_dfs.append(nova_linha)
-
-                else:
-                    print(f"Aba {nome_aba} do arquivo {arquivo} não contém a coluna 'Planned effort' ou não possui colunas suficientes.")
 
     # Cria um DataFrame a partir da lista de dicionários
     if lista_dfs:
         dataframe_consolidado = pd.DataFrame(lista_dfs)
+
+        # Exclui colunas indesejadas, mas mantém as linhas de "Atividades DTI_Suporte"
+        dataframe_consolidado.drop(columns=['GAP', 'Horas disponíveis', 'Total de esforço (hrs)'], inplace=True, errors='ignore')
 
         # Salvando o DataFrame consolidado no caminho especificado
         caminho_para_salvar_arquivo = 'C:/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
