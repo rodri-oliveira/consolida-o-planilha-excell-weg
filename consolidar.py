@@ -5,7 +5,11 @@ import os
 def consolidar_planilhas(caminho_das_planilhas):
     """
     Consolida todas as planilhas de todos os arquivos Excel no diretório especificado,
+<<<<<<< HEAD
     criando colunas específicas como MÊS, ANO, Epic, Status, Due Date, Assignee e Planned Effort.
+=======
+    criando colunas específicas como MÊS, ANO, Epic, Status, Due Date, Assignee e horas.
+>>>>>>> 0466a61eb637bb552094622effe2f0fc735a28d3
     
     Parâmetros:
     caminho_das_planilhas (str): Caminho do diretório onde estão as planilhas a serem consolidadas.
@@ -41,6 +45,7 @@ def consolidar_planilhas(caminho_das_planilhas):
                         assignee = row['Assignee'] if 'Assignee' in df.columns else ''
                         planned_effort = row['Planned effort']
 
+<<<<<<< HEAD
                         # Verifique se as colunas de I a Y estão presentes no DataFrame
                         colunas_meses = df.columns[8:25]  # I até Y (colunas 9 até 25)
 
@@ -50,15 +55,27 @@ def consolidar_planilhas(caminho_das_planilhas):
 
                             ano = 2024 if idx < 5 else 2025  # Determina o ano: 2024 para os primeiros 5 meses, depois 2025
 
+=======
+                        # Adiciona uma linha para cada mês do ano
+                        for mes in ["agosto", "setembro", "outubro", "novembro", "dezembro", "janeiro", 
+                                    "fevereiro", "março", "abril", "maio", "junho", "julho"]:
+                            ano = 2024 if mes in ["agosto", "setembro", "outubro", "novembro", "dezembro"] else 2025
+>>>>>>> 0466a61eb637bb552094622effe2f0fc735a28d3
                             nova_linha = {
                                 'Epic': epic,
                                 'Status': status,
                                 'Due Date': due_date,
                                 'Assignee': assignee,
+<<<<<<< HEAD
                                 'Planned Effort': planned_effort,  # A coluna "Planned Effort"
                                 'MÊS': mes,
                                 'ANO': ano,
                                 'Horas mês': valor_hora_mes  # Valor das horas do mês correspondente (I5 até Y5)
+=======
+                                'horas': planned_effort,
+                                'MÊS': mes,
+                                'ANO': ano
+>>>>>>> 0466a61eb637bb552094622effe2f0fc735a28d3
                             }
                             lista_dfs.append(nova_linha)
 
@@ -68,12 +85,18 @@ def consolidar_planilhas(caminho_das_planilhas):
     # Cria um DataFrame a partir da lista de dicionários
     if lista_dfs:
         dataframe_consolidado = pd.DataFrame(lista_dfs)
+<<<<<<< HEAD
 
         # Renomear a coluna "horas" para "Planned Effort"
         dataframe_consolidado.rename(columns={'horas': 'Planned Effort'}, inplace=True)
 
         # Salvando o DataFrame consolidado no caminho especificado
         caminho_para_salvar_arquivo = 'C:/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
+=======
+
+        # Salvando o DataFrame consolidado no caminho especificado
+        caminho_para_salvar_arquivo = 'C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
+>>>>>>> 0466a61eb637bb552094622effe2f0fc735a28d3
         os.makedirs(os.path.dirname(caminho_para_salvar_arquivo), exist_ok=True)
         dataframe_consolidado.to_excel(caminho_para_salvar_arquivo, index=False)
 
