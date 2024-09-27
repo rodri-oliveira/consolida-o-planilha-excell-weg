@@ -1,3 +1,4 @@
+
 import os
 import pandas as pd
 import tkinter as tk
@@ -172,7 +173,7 @@ def consolidar_planilhas(caminho_das_planilhas):
         dataframe_consolidado.drop(columns=['GAP', 'Horas disponíveis', 'Total de esforço (hrs)'], inplace=True, errors='ignore')
 
         # Salvando o DataFrame consolidado no caminho especificado
-        caminho_para_salvar_arquivo = 'C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
+        caminho_para_salvar_arquivo = 'C:/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
         os.makedirs(os.path.dirname(caminho_para_salvar_arquivo), exist_ok=True)
         dataframe_consolidado.to_excel(caminho_para_salvar_arquivo, index=False)
 
