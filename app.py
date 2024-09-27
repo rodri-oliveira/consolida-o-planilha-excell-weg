@@ -1,9 +1,8 @@
-
 import os
 import pandas as pd
 import tkinter as tk
 from tkinter import messagebox, ttk, filedialog
-from consolidar import consolidar_planilhas  # Importa a função consolidar_planilhas do arquivo consolidar.py
+from consolidar import consolidar_planilhas  # Certifique-se de que essa linha esteja correta
 
 # Variável global para armazenar o DataFrame consolidado
 dataframe_consolidado = None
@@ -101,82 +100,4 @@ def consolidar_planilhas_interface():
     botao_nova_busca = tk.Button(janela_principal, text="Nova Busca", command=nova_busca)
     botao_nova_busca.pack()
 
-    # Inicia a interface
     janela_principal.mainloop()
-
-# Função para consolidar as planilhas
-def consolidar_planilhas(caminho_das_planilhas):
-    """Consolida todas as planilhas de todos os arquivos Excel no diretório especificado."""
-    global dataframe_consolidado
-    lista_dfs = []
-
-    # Loop para percorrer todos os arquivos no diretório de planilhas
-    for arquivo in os.listdir(caminho_das_planilhas):
-        if arquivo.endswith('.xlsx'):
-            caminho_completo = os.path.join(caminho_das_planilhas, arquivo)
-            xls = pd.ExcelFile(caminho_completo)
-
-            # Itera sobre todas as abas do arquivo Excel
-            for nome_aba in xls.sheet_names:
-                if nome_aba == "Backlog":
-                    print(f"Aba '{nome_aba}' do arquivo {arquivo} foi ignorada.")
-                    continue
-
-                df = pd.read_excel(xls, sheet_name=nome_aba)
-
-                # Verifica se o DataFrame contém as colunas necessárias
-                if 'Planned effort' in df.columns and df.shape[1] > 5:
-                    for index, row in df.iterrows():
-                        if index < 0:  # Ignora as primeiras linhas (ajuste conforme necessário)
-                            continue
-
-                        # Captura os dados relevantes
-                        epic = row['Epic'] if 'Epic' in df.columns else ''
-                        status = row['Status'] if 'Status' in df.columns else ''
-                        due_date = row['Due Date'] if 'Due Date' in df.columns else ''
-                        planned_effort = row['Planned effort']
-                        estimate_effort = row.iloc[5] if len(row) > 5 else None
-
-                        # Localiza as colunas de meses dinamicamente (todas as colunas que vêm após a coluna 'Estimate Effort')
-                        colunas_meses = df.columns[8:]  # Assume que as primeiras 8 colunas são fixas
-
-                        # Filtrar linhas com valores inválidos (ex.: 'GAP' ou números aleatórios)
-                        if pd.isnull(planned_effort) or epic == '' or status == '':
-                            continue  # Pula se os dados essenciais estiverem faltando
-
-                        for idx, mes in enumerate(colunas_meses):
-                            valor_hora_mes = row[mes]
-                            ano = 2024 if idx < 5 else 2025  # Ajuste conforme o número de meses no arquivo
-
-                            # Verifica se o valor da célula é válido e se é numérico
-                            if pd.isnull(valor_hora_mes) or not isinstance(valor_hora_mes, (int, float)):
-                                continue
-
-                            nova_linha = {
-                                'Epic': epic,
-                                'Status': status,
-                                'Due Date': due_date,
-                                'Assignee': row['Assignee'] if 'Assignee' in df.columns else '',
-                                'Planned Effort': planned_effort,
-                                'Estimate Effort': estimate_effort,
-                                'MÊS': mes,
-                                'ANO': ano,
-                                'Horas mês': valor_hora_mes
-                            }
-                            lista_dfs.append(nova_linha)
-
-    # Cria um DataFrame a partir da lista de dicionários
-    if lista_dfs:
-        dataframe_consolidado = pd.DataFrame(lista_dfs)
-
-        # Exclui colunas indesejadas, mas mantém as linhas de "Atividades DTI_Suporte"
-        dataframe_consolidado.drop(columns=['GAP', 'Horas disponíveis', 'Total de esforço (hrs)'], inplace=True, errors='ignore')
-
-        # Salvando o DataFrame consolidado no caminho especificado
-        caminho_para_salvar_arquivo = 'C:/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
-        os.makedirs(os.path.dirname(caminho_para_salvar_arquivo), exist_ok=True)
-        dataframe_consolidado.to_excel(caminho_para_salvar_arquivo, index=False)
-
-        print(f"Relatório consolidado salvo em: {caminho_para_salvar_arquivo}")
-    else:
-        print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")

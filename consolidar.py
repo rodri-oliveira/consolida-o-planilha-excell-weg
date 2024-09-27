@@ -12,43 +12,41 @@ def consolidar_planilhas(caminho_das_planilhas):
             caminho_completo = os.path.join(caminho_das_planilhas, arquivo)
             xls = pd.ExcelFile(caminho_completo)
 
-            # Processa todas as abas dinamicamente, ignorando a aba "Backlog"
             for nome_aba in xls.sheet_names:
                 if nome_aba == "Backlog":  # Ignora a aba "Backlog"
                     continue
 
                 df = pd.read_excel(xls, sheet_name=nome_aba)
 
-                # Verifica se a aba tem as colunas mínimas necessárias para a consolidação
+                # Verifica se a aba tem as colunas mínimas necessárias
                 if 'Planned effort' in df.columns and df.shape[1] > 5:
                     for index, row in df.iterrows():
-                        if index < 4:
-                            continue  # Ignora as primeiras linhas (ajuste conforme necessário)
+                        if index < 3:  # Ignora as primeiras linhas
+                            continue
 
-                        # Obtém os valores essenciais (Epic, Status, Due Date, etc.)
-                        epic = df.iloc[1, 0]  # Captura o valor de 'Epic' na linha 2
+                        # Captura os dados relevantes
+                        epic = row['Epic'] if 'Epic' in df.columns else ''
                         status = row['Status'] if 'Status' in df.columns else ''
                         due_date = row['Due Date'] if 'Due Date' in df.columns else ''
                         planned_effort = row['Planned effort']
                         estimate_effort = row.iloc[5] if len(row) > 5 else None
 
-                        # Identifica as colunas de meses dinamicamente com base em padrões de nomes de meses
-                        colunas_meses = [col for col in df.columns if any(mes in col for mes in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])]
+                        # As colunas de meses são a partir da coluna I (coluna index 8)
+                        colunas_meses = df.columns[8:]  # Assume que as primeiras 8 colunas são fixas
 
-                        # Definição dinâmica de ano inicial e cálculo de ano conforme a progressão dos meses
-                        ano_base = 2024
-                        meses_por_ano = 12
-
-                        # Processa dinamicamente as colunas de meses
-                        for idx, mes in enumerate(colunas_meses):
+                        for index, mes in enumerate(colunas_meses):
                             valor_hora_mes = row[mes]
-                            ano = ano_base + (idx // meses_por_ano)  # Calcula o ano automaticamente baseado no número de meses
 
                             # Verifica se o valor da célula é válido e se é numérico
                             if pd.isnull(valor_hora_mes) or not isinstance(valor_hora_mes, (int, float)):
                                 continue
 
-                            # Cria uma nova linha no DataFrame consolidado
+                            # Define o ano com base no nome do mês
+                            if mes in ['Ago', 'Set', 'Out', 'Nov', 'Dez']:  # Meses de 2024
+                                ano = 2024
+                            else:  # Meses de 2025 em diante
+                                ano = 2025 + ((index - 5) // 12)  # Incrementa o ano a cada 12 meses
+
                             nova_linha = {
                                 'Epic': epic,
                                 'Status': status,
@@ -60,14 +58,13 @@ def consolidar_planilhas(caminho_das_planilhas):
                                 'ANO': ano,
                                 'Horas mês': valor_hora_mes
                             }
-
                             lista_dfs.append(nova_linha)
 
-    # Consolida todos os dados das abas em um único DataFrame
+    # Consolida os dados em um DataFrame
     if lista_dfs:
         dataframe_consolidado = pd.DataFrame(lista_dfs)
 
-        # Remove colunas indesejadas
+        # Exclui colunas indesejadas
         dataframe_consolidado.drop(columns=['Horas disponíveis', 'Total de esforço'], inplace=True, errors='ignore')
 
         # Define o caminho para salvar a planilha consolidada
