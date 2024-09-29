@@ -34,18 +34,20 @@ def consolidar_planilhas(caminho_das_planilhas):
                         # As colunas de meses são a partir da coluna I (coluna index 8)
                         colunas_meses = df.columns[8:]  # Assume que as primeiras 8 colunas são fixas
 
-                        for index, mes in enumerate(colunas_meses):
+                        for idx, mes in enumerate(colunas_meses):
                             valor_hora_mes = row[mes]
 
                             # Verifica se o valor da célula é válido e se é numérico
                             if pd.isnull(valor_hora_mes) or not isinstance(valor_hora_mes, (int, float)):
                                 continue
 
-                            # Define o ano com base no nome do mês
-                            if mes in ['Ago', 'Set', 'Out', 'Nov', 'Dez']:  # Meses de 2024
+                            # Lógica para determinar o ano com base na posição do mês
+                            if idx < 5:  # I1 a M1 (ago/24 a dez/24)
                                 ano = 2024
-                            else:  # Meses de 2025 em diante
-                                ano = 2025 + ((index - 5) // 12)  # Incrementa o ano a cada 12 meses
+                            elif 5 <= idx < 17:  # N1 a Z1 (jan/25 a dez/25)
+                                ano = 2025
+                            else:  # Para os meses seguintes, incrementa o ano
+                                ano = 2025 + (idx - 5) // 12
 
                             nova_linha = {
                                 'Epic': epic,
