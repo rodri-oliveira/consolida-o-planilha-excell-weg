@@ -58,8 +58,8 @@ def consolidar_planilhas(caminho_das_planilhas):
                                 continue
 
                             # Extrai o mês e o ano
-                            mes_abreviado, ano = mes.split('/')
-                            ano = int(ano)  # Converte o ano para inteiro
+                            mes_abreviado, ano_abreviado = mes.split('/')
+                            ano = int(ano_abreviado) + 2000  # Converte o ano abreviado para completo
 
                             # Verifica se o mês está no dicionário e, caso não, adiciona
                             if mes_abreviado not in meses_map:
@@ -75,7 +75,7 @@ def consolidar_planilhas(caminho_das_planilhas):
                                 'Planned Effort': planned_effort,
                                 'Estimate Effort': estimate_effort,
                                 'MÊS': mes_nome_completo,  # Usa o mês corrigido
-                                'ANO': ano,
+                                'ANO': ano,  # Usa o ano completo
                                 'Horas mês': valor_hora_mes
                             }
                             lista_dfs.append(nova_linha)
