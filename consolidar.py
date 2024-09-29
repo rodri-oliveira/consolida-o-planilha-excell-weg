@@ -6,6 +6,22 @@ def consolidar_planilhas(caminho_das_planilhas):
     global dataframe_consolidado
     lista_dfs = []
 
+    # Dicionário para mapear meses abreviados para seus nomes completos
+    meses_map = {
+        'jan': 'janeiro',
+        'fev': 'fevereiro',
+        'mar': 'março',
+        'abr': 'abril',
+        'mai': 'maio',
+        'jun': 'junho',
+        'jul': 'julho',
+        'ago': 'agosto',
+        'set': 'setembro',
+        'out': 'outubro',
+        'nov': 'novembro',
+        'dez': 'dezembro',
+    }
+
     # Loop para percorrer todos os arquivos no diretório de planilhas
     for arquivo in os.listdir(caminho_das_planilhas):
         if arquivo.endswith('.xlsx'):
@@ -41,13 +57,15 @@ def consolidar_planilhas(caminho_das_planilhas):
                             if pd.isnull(valor_hora_mes) or not isinstance(valor_hora_mes, (int, float)):
                                 continue
 
-                            # Lógica para determinar o ano com base na posição do mês
-                            if idx < 5:  # I1 a M1 (ago/24 a dez/24)
-                                ano = 2024
-                            elif 5 <= idx < 17:  # N1 a Z1 (jan/25 a dez/25)
-                                ano = 2025
-                            else:  # Para os meses seguintes, incrementa o ano
-                                ano = 2025 + (idx - 5) // 12
+                            # Extrai o mês e o ano
+                            mes_abreviado, ano = mes.split('/')
+                            ano = int(ano)  # Converte o ano para inteiro
+
+                            # Verifica se o mês está no dicionário e, caso não, adiciona
+                            if mes_abreviado not in meses_map:
+                                meses_map[mes_abreviado] = mes_abreviado  # Adiciona o mês abreviado se não estiver no dicionário
+
+                            mes_nome_completo = meses_map[mes_abreviado]  # Usa o mapeamento
 
                             nova_linha = {
                                 'Epic': epic,
@@ -56,7 +74,7 @@ def consolidar_planilhas(caminho_das_planilhas):
                                 'Assignee': row['Assignee'] if 'Assignee' in df.columns else '',
                                 'Planned Effort': planned_effort,
                                 'Estimate Effort': estimate_effort,
-                                'MÊS': mes,
+                                'MÊS': mes_nome_completo,  # Usa o mês corrigido
                                 'ANO': ano,
                                 'Horas mês': valor_hora_mes
                             }
