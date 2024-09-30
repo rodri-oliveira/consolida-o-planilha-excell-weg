@@ -43,6 +43,22 @@ def consolidar_planilhas(caminho_das_planilhas):
 
     anos = ajustar_ano(meses)  # Chama a função para obter os anos
 
+    # Dicionário para mapear meses abreviados para seus nomes completos
+    meses_map = {
+        'jan': 'janeiro',
+        'fev': 'fevereiro',
+        'mar': 'março',
+        'abr': 'abril',
+        'mai': 'maio',
+        'jun': 'junho',
+        'jul': 'julho',
+        'ago': 'agosto',
+        'set': 'setembro',
+        'out': 'outubro',
+        'nov': 'novembro',
+        'dez': 'dezembro',
+    }
+
     # Loop para percorrer todos os arquivos no diretório de planilhas
     for arquivo in os.listdir(caminho_das_planilhas):
         if arquivo.endswith('.xlsx'):
@@ -55,27 +71,39 @@ def consolidar_planilhas(caminho_das_planilhas):
 
                 df = pd.read_excel(xls, sheet_name=nome_aba)
 
-                # Verificando se as colunas necessárias existem e se a planilha tem mais que 5 colunas
+                # Verifica se a aba tem as colunas mínimas necessárias
                 if 'Planned effort' in df.columns and df.shape[1] > 5:
                     for index, row in df.iterrows():
-                        if index < 4:
+                        if index < 3:  # Ignora as primeiras linhas
                             continue
 
-                        epic = df.iloc[1, 0]  # Valor de Epic na linha 2
+                        # Captura os dados relevantes
+                        epic = row['Epic'] if 'Epic' in df.columns else ''
                         status = row['Status'] if 'Status' in df.columns else ''
                         due_date = row['Due Date'] if 'Due Date' in df.columns else ''
                         planned_effort = row['Planned effort']
                         estimate_effort = row.iloc[5] if len(row) > 5 else None
 
-                        # Identificando as colunas de meses dinamicamente
-                        colunas_meses = [col for col in df.columns if any(mes in col for mes in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])]
+                        # As colunas de meses são a partir da coluna I (coluna index 8)
+                        colunas_meses = df.columns[8:]  # Assume que as primeiras 8 colunas são fixas
 
                         for idx, mes in enumerate(colunas_meses):
                             valor_hora_mes = row[mes]
-                            
-                            # Usa o ano correspondente da lista obtida
-                            ano = anos[idx] if idx < len(anos) else ''
-                            
+
+                            # Verifica se o valor da célula é válido e se é numérico
+                            if pd.isnull(valor_hora_mes) or not isinstance(valor_hora_mes, (int, float)):
+                                continue
+
+                            # Extrai o mês e o ano
+                            mes_abreviado, ano_abreviado = mes.split('/')
+                            ano = int(ano_abreviado) + 2000  # Converte o ano abreviado para completo
+
+                            # Verifica se o mês está no dicionário e, caso não, adiciona
+                            if mes_abreviado not in meses_map:
+                                meses_map[mes_abreviado] = mes_abreviado  # Adiciona o mês abreviado se não estiver no dicionário
+
+                            mes_nome_completo = meses_map[mes_abreviado]  # Usa o mapeamento
+
                             nova_linha = {
                                 'Epic': epic,
                                 'Status': status,
@@ -83,19 +111,20 @@ def consolidar_planilhas(caminho_das_planilhas):
                                 'Assignee': row['Assignee'] if 'Assignee' in df.columns else '',
                                 'Planned Effort': planned_effort,
                                 'Estimate Effort': estimate_effort,
-                                'MÊS': meses[idx] if idx < len(meses) else '',  # Preenche com o mês correspondente
-                                'ANO': ano,
+                                'MÊS': mes_nome_completo,  # Usa o mês corrigido
+                                'ANO': ano,  # Usa o ano completo
                                 'Horas mês': valor_hora_mes
                             }
                             lista_dfs.append(nova_linha)
 
+    # Consolida os dados em um DataFrame
     if lista_dfs:
         dataframe_consolidado = pd.DataFrame(lista_dfs)
 
         # Exclui colunas indesejadas
         dataframe_consolidado.drop(columns=['Horas disponíveis', 'Total de esforço'], inplace=True, errors='ignore')
 
-        caminho_para_salvar_arquivo = 'C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
+        caminho_para_salvar_arquivo = 'C:/consolida-o-planilha-excell-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
         os.makedirs(os.path.dirname(caminho_para_salvar_arquivo), exist_ok=True)
         dataframe_consolidado.to_excel(caminho_para_salvar_arquivo, index=False)
 
@@ -103,6 +132,4 @@ def consolidar_planilhas(caminho_das_planilhas):
     else:
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
 
-# Chamada da função com o caminho das planilhas
-caminho_das_planilhas = 'C:/consolidar-planilha-weg/planilhas-base/'
-consolidar_planilhas(caminho_das_planilhas)
+
