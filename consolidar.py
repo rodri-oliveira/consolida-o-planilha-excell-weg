@@ -1,5 +1,6 @@
+import os  # Certifique-se de adicionar isso para trabalhar com diretórios e arquivos
 import pandas as pd
-import os
+
 
 def consolidar_planilhas(caminho_das_planilhas):
     """Consolida todas as planilhas de todos os arquivos Excel no diretório especificado, ignorando a aba 'Backlog'."""
@@ -23,9 +24,9 @@ def consolidar_planilhas(caminho_das_planilhas):
 
                 # Verifica se a aba tem as colunas mínimas necessárias
                 if 'Planned effort' in df.columns and df.shape[1] > 5:
-                    # Captura o valor da célula A3 (Seção) e A5 (Equipe)
-                    valor_secao = df.iloc[3, 0]  # A3 (duas linhas acima de A5)
-                    valor_equipe = df.iloc[4, 0]  # A5
+                    # Obtendo o valor da "Seção" que está duas linhas acima da célula da "Equipe"
+                    valor_secao = df.iloc[3, 0]  # Captura a célula A5 (duas linhas acima da célula de equipe)
+                    valor_equipe = df.iloc[4, 0]  # Captura a célula A6 (abaixo da seção)
 
                     for index, row in df.iterrows():
                         if index < 3:  # Ignora as primeiras linhas
@@ -69,8 +70,8 @@ def consolidar_planilhas(caminho_das_planilhas):
                                     'MÊS': mes_abreviado,
                                     'ANO': ano,
                                     'Horas mês': valor_hora_mes,
-                                    'Seção': valor_secao,  # Adiciona o valor da coluna Seção (A3)
-                                    'Equipe': valor_equipe   # Adiciona o valor da coluna Equipe (A5)
+                                    'Seção': valor_secao,    # Adiciona o valor da Seção
+                                    'Equipe': valor_equipe   # Adiciona o valor da Equipe
                                 }
                                 lista_dfs.append(nova_linha)
 
