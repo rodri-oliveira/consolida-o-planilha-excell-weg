@@ -127,7 +127,7 @@ def consolidar_planilhas(caminho_das_planilhas):
                 # Verifica se o DataFrame contém as colunas necessárias
                 if 'Planned effort' in df.columns and df.shape[1] > 5:
                     for index, row in df.iterrows():
-                        if index < 0:  # Ignora as primeiras linhas (ajuste conforme necessário)
+                        if index < 3:  # Ignora as primeiras linhas (ajuste conforme necessário)
                             continue
 
                         # Captura os dados relevantes
