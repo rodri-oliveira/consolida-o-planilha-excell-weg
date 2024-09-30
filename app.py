@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import tkinter as tk
 from tkinter import messagebox, ttk, filedialog
-from consolidar import consolidar_planilhas  # Certifique-se de que essa linha esteja correta
+from consolidar import consolidar_planilhas, consolidar_aba_backlog  # Certifique-se de que essa linha esteja correta
 
 # Variável global para armazenar o DataFrame consolidado
 dataframe_consolidado = None
@@ -29,6 +29,12 @@ def consolidar_planilhas_interface():
             coluna_combobox['values'] = dataframe_consolidado.columns.tolist()
 
         messagebox.showinfo("Sucesso", "Planilhas consolidadas com sucesso!")
+
+    def consolidar_backlog_interface():
+        caminho_pasta_origem = entrada_pasta.get()
+        consolidar_aba_backlog(caminho_pasta_origem)
+
+        messagebox.showinfo("Sucesso", "Planilhas de backlog consolidadas com sucesso!")
 
     def gerar_relatorio_callback():
         nome_coluna = coluna_combobox.get()
@@ -79,6 +85,10 @@ def consolidar_planilhas_interface():
 
     botao_consolidar = tk.Button(janela_principal, text="Consolidar", command=consolidar)
     botao_consolidar.pack()
+
+    # Botão para consolidar apenas planilhas de backlog
+    botao_consolidar_backlog = tk.Button(janela_principal, text="Consolidar Backlog", command=consolidar_backlog_interface)
+    botao_consolidar_backlog.pack()
 
     # Seletor de colunas, operadores e valor para filtrar o relatório
     tk.Label(janela_principal, text="Selecione uma coluna:").pack()
