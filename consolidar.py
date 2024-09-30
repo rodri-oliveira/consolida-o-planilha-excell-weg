@@ -93,6 +93,9 @@ def consolidar_planilhas(caminho_das_planilhas):
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
 
 
+import os
+import pandas as pd
+
 def consolidar_aba_backlog(caminho_das_planilhas):
     """Consolida as planilhas da aba 'Backlog' de todos os arquivos Excel no diretório especificado."""
     global dataframe_consolidado
@@ -123,7 +126,7 @@ def consolidar_aba_backlog(caminho_das_planilhas):
 
                         # Itera sobre as linhas do DataFrame
                         for index, row in df.iterrows():
-                            if index < 3:  # Ignora as primeiras linhas
+                            if index < 5:  # Ignora as primeiras linhas
                                 continue
 
                             # Captura os dados relevantes
@@ -151,6 +154,9 @@ def consolidar_aba_backlog(caminho_das_planilhas):
         # Exclui colunas indesejadas
         dataframe_consolidado.drop(columns=['Horas disponíveis', 'Total de esforço'], inplace=True, errors='ignore')
 
+        # Exclui linhas onde a primeira coluna está em branco
+        dataframe_consolidado = dataframe_consolidado[dataframe_consolidado.iloc[:, 0].notna()]
+
         # Define o caminho para salvar a planilha consolidada
         caminho_para_salvar_arquivo = 'C:/consolidar-planilha-weg/backlog-consolidado/backlog_consolidado.xlsx'
         os.makedirs(os.path.dirname(caminho_para_salvar_arquivo), exist_ok=True)
@@ -159,7 +165,3 @@ def consolidar_aba_backlog(caminho_das_planilhas):
         print(f"Relatório consolidado salvo em: {caminho_para_salvar_arquivo}")
     else:
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
-
-# (Se necessário, adicione o código para salvar ou processar o dataframe_consolidado)
-
-    
