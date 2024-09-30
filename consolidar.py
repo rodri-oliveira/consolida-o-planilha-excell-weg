@@ -23,6 +23,10 @@ def consolidar_planilhas(caminho_das_planilhas):
 
                 # Verifica se a aba tem as colunas mínimas necessárias
                 if 'Planned effort' in df.columns and df.shape[1] > 5:
+                    # Captura o valor da célula A3 (Seção) e A5 (Equipe)
+                    valor_secao = df.iloc[3, 0]  # A3 (duas linhas acima de A5)
+                    valor_equipe = df.iloc[4, 0]  # A5
+
                     for index, row in df.iterrows():
                         if index < 3:  # Ignora as primeiras linhas
                             continue
@@ -64,7 +68,9 @@ def consolidar_planilhas(caminho_das_planilhas):
                                     'Estimate Effort': estimate_effort,
                                     'MÊS': mes_abreviado,
                                     'ANO': ano,
-                                    'Horas mês': valor_hora_mes
+                                    'Horas mês': valor_hora_mes,
+                                    'Seção': valor_secao,  # Adiciona o valor da coluna Seção (A3)
+                                    'Equipe': valor_equipe   # Adiciona o valor da coluna Equipe (A5)
                                 }
                                 lista_dfs.append(nova_linha)
 
