@@ -14,12 +14,13 @@ def consolidar_planilhas(caminho_das_planilhas):
 
             print(f"Processando arquivo: {arquivo}")
             for nome_aba in xls.sheet_names:
-                # Verifica se a aba é "Backlog" e ignora
+    # Verifica se a aba é "Backlog" e processa apenas ela
                 if 'Backlog' in nome_aba:
-                    print(f"Ignorando aba: '{nome_aba}'")
-                    continue
+                    print(f"Processando aba: '{nome_aba}'")
+                    df = pd.read_excel(xls, sheet_name=nome_aba)
+                    # A lógica de processamento da aba continua aqui...
 
-                df = pd.read_excel(xls, sheet_name=nome_aba)
+                
 
                 # Verifica se a aba tem as colunas mínimas necessárias
                 if 'Planned effort' in df.columns and df.shape[1] > 5:
@@ -93,9 +94,6 @@ def consolidar_planilhas(caminho_das_planilhas):
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
 
 
-import os
-import pandas as pd
-
 def consolidar_aba_backlog(caminho_das_planilhas):
     """Consolida as planilhas da aba 'Backlog' de todos os arquivos Excel no diretório especificado."""
     global dataframe_consolidado
@@ -165,3 +163,57 @@ def consolidar_aba_backlog(caminho_das_planilhas):
         print(f"Relatório consolidado salvo em: {caminho_para_salvar_arquivo}")
     else:
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
+
+
+
+def consolidar_horas_backlog(caminho_das_planilhas):
+    """Consolida os dados das abas 'Backlog' de todos os arquivos Excel no diretório especificado."""
+    lista_dfs = []
+
+    # Loop para percorrer todos os arquivos no diretório de planilhas
+    for arquivo in os.listdir(caminho_das_planilhas):
+        if arquivo.endswith('.xlsx'):
+            caminho_completo = os.path.join(caminho_das_planilhas, arquivo)
+            xls = pd.ExcelFile(caminho_completo)
+
+            print(f"Processando arquivo: {arquivo}")
+            for nome_aba in xls.sheet_names:
+                # Verifica se a aba é "Backlog" e processa apenas ela
+                if 'Backlog' in nome_aba:
+                    print(f"Processando aba: '{nome_aba}'")
+                    df = pd.read_excel(xls, sheet_name=nome_aba)
+
+                    # Itera pelas linhas de "Epic" e gera os dados de "Hora/mês"
+                    for index, row in df.iterrows():
+                        # Pega o valor do Epic (coluna A), Planned effort (coluna G), e Hora/mês (colunas H a S)
+                        epic = row[0]  # Valor da coluna A (Epic)
+                        planned_effort = row[6]  # Valor da coluna G (Planned effort)
+
+                        # Verifica se há dados nas colunas de H a S (12 meses)
+                        meses = ['Mês 1', 'Mês 2', 'Mês 3', 'Mês 4', 'Mês 5', 'Mês 6', 'Mês 7', 'Mês 8', 'Mês 9', 'Mês 10', 'Mês 11', 'Mês 12']
+                        horas_mes = row[7:19]  # Colunas H até S
+
+                        # Verifica se as células contêm dados válidos
+                        if not horas_mes.isnull().all():
+                            # Cria uma linha para cada mês, com o respectivo valor de Hora/mês
+                            for i, hora in enumerate(horas_mes):
+                                nova_linha = {
+                                    'Epic': epic,
+                                    'Planned effort': planned_effort,
+                                    'Hora/mês': hora,
+                                    'Mês': meses[i]
+                                }
+                                lista_dfs.append(nova_linha)
+
+    # Consolida os dados em um DataFrame final
+    if lista_dfs:
+        dataframe_consolidado = pd.DataFrame(lista_dfs)
+
+        # Define o caminho para salvar a planilha consolidada
+        caminho_para_salvar_arquivo = 'C:/consolidar-planilha-weg/horas-backlog/consolidada-backlog-horas.xlsx'
+        os.makedirs(os.path.dirname(caminho_para_salvar_arquivo), exist_ok=True)
+        dataframe_consolidado.to_excel(caminho_para_salvar_arquivo, index=False)
+
+        print(f"Relatório consolidado salvo em: {caminho_para_salvar_arquivo}")
+    else:
+        print("Nenhuma aba 'Backlog' foi encontrada para consolidar.")
