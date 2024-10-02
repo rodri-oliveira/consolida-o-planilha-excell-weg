@@ -1,6 +1,10 @@
 import os  # Certifique-se de adicionar isso para trabalhar com diretórios e arquivos
 import pandas as pd
 
+import os  # Certifique-se de adicionar isso para trabalhar com diretórios e arquivos
+import pandas as pd
+
+
 def consolidar_planilhas(caminho_das_planilhas):
     """Consolida todas as planilhas de todos os arquivos Excel no diretório especificado, ignorando a aba 'Backlog'."""
     global dataframe_consolidado
@@ -14,19 +18,18 @@ def consolidar_planilhas(caminho_das_planilhas):
 
             print(f"Processando arquivo: {arquivo}")
             for nome_aba in xls.sheet_names:
-    # Verifica se a aba é "Backlog" e processa apenas ela
+                # Verifica se a aba é "Backlog" e ignora
                 if 'Backlog' in nome_aba:
-                    print(f"Processando aba: '{nome_aba}'")
-                    df = pd.read_excel(xls, sheet_name=nome_aba)
-                    # A lógica de processamento da aba continua aqui...
+                    print(f"Ignorando aba: '{nome_aba}'")
+                    continue
 
-                
+                df = pd.read_excel(xls, sheet_name=nome_aba)
 
                 # Verifica se a aba tem as colunas mínimas necessárias
                 if 'Planned effort' in df.columns and df.shape[1] > 5:
-                    # Obtendo o valor da "Seção" e "Equipe"
-                    valor_secao = df.iloc[3, 0]  # Captura a célula A4 (duas linhas acima da célula de equipe)
-                    valor_equipe = df.iloc[4, 0]  # Captura a célula A5 (abaixo da seção)
+                    # Obtendo o valor da "Seção" que está duas linhas acima da célula da "Equipe"
+                    valor_secao = df.iloc[3, 0]  # Captura a célula A5 (duas linhas acima da célula de equipe)
+                    valor_equipe = df.iloc[4, 0]  # Captura a célula A6 (abaixo da seção)
 
                     for index, row in df.iterrows():
                         if index < 3:  # Ignora as primeiras linhas
@@ -50,15 +53,16 @@ def consolidar_planilhas(caminho_das_planilhas):
                                 if pd.isnull(valor_hora_mes) or not isinstance(valor_hora_mes, (int, float)):
                                     continue
 
-                                # Lógica para determinar o ano completo com base na posição do mês
+                                # Verifica se a coluna do mês contém um valor esperado
                                 if isinstance(mes, str) and '/' in mes:
                                     mes_abreviado, ano_abreviado = mes.split('/')
-                                    ano = int('20' + ano_abreviado)  # Ex: '24' → 2024
                                 else:
                                     print(f"Erro no arquivo '{arquivo}', aba '{nome_aba}', linha {index + 1}, coluna '{mes}': formato inesperado para o mês.")
                                     continue
 
-                                # Cria a nova linha para o DataFrame consolidado
+                                # Lógica para determinar o ano completo com base na posição do mês
+                                ano = int('20' + ano_abreviado)
+
                                 nova_linha = {
                                     'Epic': epic,
                                     'Status': status,
@@ -85,14 +89,13 @@ def consolidar_planilhas(caminho_das_planilhas):
         dataframe_consolidado.drop(columns=['Horas disponíveis', 'Total de esforço'], inplace=True, errors='ignore')
 
         # Define o caminho para salvar a planilha consolidada
-        caminho_para_salvar_arquivo = 'C:/consolidar-planilha-weg/backlog-consolidado/backlog_consolidado.xlsx'
+        caminho_para_salvar_arquivo = 'C:/consolidar-planilha-weg/planilhas-consolidadas/planilha_consolidada.xlsx'
         os.makedirs(os.path.dirname(caminho_para_salvar_arquivo), exist_ok=True)
         dataframe_consolidado.to_excel(caminho_para_salvar_arquivo, index=False)
 
         print(f"Relatório consolidado salvo em: {caminho_para_salvar_arquivo}")
     else:
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
-
 
 def consolidar_aba_backlog(caminho_das_planilhas):
     """Consolida as planilhas da aba 'Backlog' de todos os arquivos Excel no diretório especificado."""
@@ -163,7 +166,6 @@ def consolidar_aba_backlog(caminho_das_planilhas):
         print(f"Relatório consolidado salvo em: {caminho_para_salvar_arquivo}")
     else:
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
-
 
 
 def consolidar_horas_backlog(caminho_das_planilhas):
