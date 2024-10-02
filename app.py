@@ -95,5 +95,3 @@ def consolidar_planilhas_interface():
 
     janela_principal.mainloop()
 
-if __name__ == "__main__":
-    consolidar_planilhas_interface()

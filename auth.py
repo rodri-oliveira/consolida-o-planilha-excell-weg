@@ -70,8 +70,6 @@ def buscar_arquivos_pasta(token, caminho_pasta):
         print(f"Erro ao buscar arquivos: {response.status_code} - {response.text}")
         return None
 
-import requests
-
 def enviar_para_sharepoint(caminho_arquivo, site_url, access_token, nome_destino):
     headers = {
         'Authorization': f'Bearer {access_token}',
