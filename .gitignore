@@ -2,6 +2,9 @@
 .venv/
 # Para Windows, ignore também a pasta de ambiente padrão
 env/
+
+.env
+
 # Arquivos do Visual Studio Code
 .vscode/
 # Arquivos de cache do Python
