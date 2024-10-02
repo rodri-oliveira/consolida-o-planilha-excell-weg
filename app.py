@@ -1,123 +1,99 @@
-import os
-import pandas as pd
 import tkinter as tk
-from tkinter import messagebox, ttk, filedialog
-from consolidar import consolidar_planilhas, consolidar_aba_backlog, consolidar_horas_backlog  # Incluímos consolidar_horas_backlog
-
-# Variável global para armazenar o DataFrame consolidado
-dataframe_consolidado = None
-
-def gerar_relatorio(dataframe, nome_coluna, operador, valor):
-    """Filtra o DataFrame baseado nos critérios fornecidos."""
-    if operador == "maior que":
-        return dataframe[dataframe[nome_coluna] > valor]
-    elif operador == "menor que":
-        return dataframe[dataframe[nome_coluna] < valor]
-    elif operador == "igual a":
-        return dataframe[dataframe[nome_coluna] == valor]
-    else:
-        raise ValueError("Operador desconhecido.")
+from tkinter import messagebox
+from auth import obter_token_sharepoint, buscar_listas_sharepoint
+from consolidar import (
+    consolidar_planilhas_sharepoint,
+    consolidar_aba_backlog_sharepoint,
+    consolidar_horas_backlog_sharepoint,
+)
 
 def consolidar_planilhas_interface():
-    global dataframe_consolidado
+    arquivos_selecionados = []
 
-    def consolidar():
-        caminho_pasta_origem = entrada_pasta.get()
-        consolidar_planilhas(caminho_pasta_origem)
+    def selecionar_arquivos():
+        token = obter_token_sharepoint()
+        if not token:
+            messagebox.showerror("Erro", "Não foi possível obter o token de acesso ao SharePoint.")
+            return
 
-        if dataframe_consolidado is not None:
-            coluna_combobox['values'] = dataframe_consolidado.columns.tolist()
+        # Obtenha a lista de arquivos do SharePoint
+        listas = buscar_listas_sharepoint(token)
+        if not listas or 'd' not in listas or 'results' not in listas['d']:
+            messagebox.showerror("Erro", "Não foi possível buscar os arquivos do SharePoint.")
+            return
 
-        messagebox.showinfo("Sucesso", "Planilhas consolidadas com sucesso!")
+        arquivos_disponiveis = listas['d']['results']
 
-    def consolidar_backlog_interface():
-        caminho_pasta_origem = entrada_pasta.get()
-        consolidar_aba_backlog(caminho_pasta_origem)
+        # Exibir lista para o usuário escolher os arquivos
+        arquivos_selecionados.clear()  # Limpa a lista anterior
+        for arquivo in arquivos_disponiveis:
+            nome_arquivo = arquivo['Name']
+            if nome_arquivo.startswith("TIN "):  # Verifique se o nome do arquivo começa com "TIN "
+                incluir = messagebox.askyesno("Seleção de Arquivos", f"Incluir o arquivo {nome_arquivo} na consolidação?")
+                if incluir:
+                    arquivos_selecionados.append(arquivo)
 
-        messagebox.showinfo("Sucesso", "Planilhas de backlog consolidadas com sucesso!")
-
-    def consolidar_horas_backlog_interface():
-        caminho_pasta_origem = entrada_pasta.get()
-        consolidar_horas_backlog(caminho_pasta_origem)
-
-        messagebox.showinfo("Sucesso", "Horas backlog consolidadas com sucesso!")
-
-    def gerar_relatorio_callback():
-        nome_coluna = coluna_combobox.get()
-        operador = operador_combobox.get()
-        valor = valor_entry.get()
-
-        if nome_coluna and operador and valor:
-            try:
-                valor = float(valor)
-                relatorio_filtrado = gerar_relatorio(dataframe_consolidado, nome_coluna, operador, valor)
-
-                if relatorio_filtrado.empty:
-                    messagebox.showinfo("Resultado", "Nenhum dado encontrado para os critérios selecionados.")
-                else:
-                    caminho_saida_relatorio = "C:/consolidar-planilha-weg/relatorios/relatorio.xlsx"
-                    os.makedirs(os.path.dirname(caminho_saida_relatorio), exist_ok=True)
-
-                    relatorio_filtrado.to_excel(caminho_saida_relatorio, index=False)
-                    messagebox.showinfo("Sucesso", f"Relatório gerado com sucesso em {caminho_saida_relatorio}!")
-            except ValueError:
-                messagebox.showwarning("Erro", "Insira um valor numérico válido.")
+        if arquivos_selecionados:
+            messagebox.showinfo("Seleção de Arquivos", "Arquivos selecionados com sucesso!")
         else:
-            messagebox.showwarning("Atenção", "Preencha todos os campos antes de gerar o relatório.")
+            messagebox.showinfo("Seleção de Arquivos", "Nenhum arquivo selecionado.")
 
-    def buscar_pasta():
-        caminho_selecionado = filedialog.askdirectory()
-        if caminho_selecionado:
-            entrada_pasta.delete(0, tk.END)
-            entrada_pasta.insert(0, caminho_selecionado)
+    def consolidar_abas():
+        print("Arquivos selecionados para consolidação:", arquivos_selecionados)  # Adicionando depuração
+        if arquivos_selecionados:
+            caminho_das_planilhas = [arquivo['ServerRelativeUrl'] for arquivo in arquivos_selecionados]
+            consolidar_planilhas_sharepoint(caminho_das_planilhas)
+            messagebox.showinfo("Sucesso", "Consolidação das abas (exceto Backlog) realizada com sucesso!")
+        else:
+            messagebox.showwarning("Atenção", "Nenhum arquivo foi selecionado.")
 
-    def nova_busca():
-        entrada_pasta.delete(0, tk.END)
-        coluna_combobox.set('')
-        operador_combobox.set('')
-        valor_entry.delete(0, tk.END)
+    def consolidar_backlog():
+        print("Arquivos selecionados para consolidação de Backlog:", arquivos_selecionados)  # Adicionando depuração
+        if arquivos_selecionados:
+            caminho_das_planilhas = [arquivo['ServerRelativeUrl'] for arquivo in arquivos_selecionados]
+            consolidar_aba_backlog_sharepoint(caminho_das_planilhas)
+            messagebox.showinfo("Sucesso", "Consolidação das abas Backlog realizada com sucesso!")
+        else:
+            messagebox.showwarning("Atenção", "Nenhum arquivo foi selecionado.")
+
+    def consolidar_horas_backlog():
+        print("Arquivos selecionados para consolidação de Horas Backlog:", arquivos_selecionados)  # Adicionando depuração
+        if arquivos_selecionados:
+            caminho_das_planilhas = [arquivo['ServerRelativeUrl'] for arquivo in arquivos_selecionados]
+            consolidar_horas_backlog_sharepoint(caminho_das_planilhas)
+            messagebox.showinfo("Sucesso", "Consolidação das horas Backlog realizada com sucesso!")
+        else:
+            messagebox.showwarning("Atenção", "Nenhum arquivo foi selecionado.")
+
+    def nova_pesquisa():
+        arquivos_selecionados.clear()  # Limpa a lista
+        messagebox.showinfo("Nova Pesquisa", "Seleção de arquivos reiniciada.")
 
     # Criação da janela principal
     janela_principal = tk.Tk()
-    janela_principal.title("Consolidar Planilhas")
+    janela_principal.title("Consolidar Planilhas do SharePoint")
 
-    # Interface de seleção de pasta e comandos
-    tk.Label(janela_principal, text="Caminho da pasta:").pack()
-    entrada_pasta = tk.Entry(janela_principal, width=50)
-    entrada_pasta.pack()
+    # Botão para selecionar arquivos
+    botao_selecionar_arquivos = tk.Button(janela_principal, text="Selecionar Arquivos", command=selecionar_arquivos)
+    botao_selecionar_arquivos.pack()
 
-    botao_buscar_pasta = tk.Button(janela_principal, text="Buscar Pasta", command=buscar_pasta)
-    botao_buscar_pasta.pack()
+    # Botão para consolidar todas as abas (menos a Backlog)
+    botao_consolidar_abas = tk.Button(janela_principal, text="Consolidar Abas", command=consolidar_abas)
+    botao_consolidar_abas.pack()
 
-    botao_consolidar = tk.Button(janela_principal, text="Consolidar", command=consolidar)
-    botao_consolidar.pack()
-
-    # Botão para consolidar apenas planilhas de backlog
-    botao_consolidar_backlog = tk.Button(janela_principal, text="Consolidar Backlog", command=consolidar_backlog_interface)
+    # Botão para consolidar apenas Backlog
+    botao_consolidar_backlog = tk.Button(janela_principal, text="Consolidar Backlog", command=consolidar_backlog)
     botao_consolidar_backlog.pack()
 
-    # Botão para consolidar horas backlog
-    botao_consolidar_horas_backlog = tk.Button(janela_principal, text="Horas Backlog", command=consolidar_horas_backlog_interface)
+    # Botão para consolidar horas Backlog
+    botao_consolidar_horas_backlog = tk.Button(janela_principal, text="Consolidar Horas Backlog", command=consolidar_horas_backlog)
     botao_consolidar_horas_backlog.pack()
 
-    # Seletor de colunas, operadores e valor para filtrar o relatório
-    tk.Label(janela_principal, text="Selecione uma coluna:").pack()
-    coluna_combobox = ttk.Combobox(janela_principal)
-    coluna_combobox.pack()
-
-    tk.Label(janela_principal, text="Selecione um operador:").pack()
-    operador_combobox = ttk.Combobox(janela_principal, values=["maior que", "menor que", "igual a"])
-    operador_combobox.pack()
-
-    tk.Label(janela_principal, text="Valor:").pack()
-    valor_entry = tk.Entry(janela_principal)
-    valor_entry.pack()
-
-    # Botões para gerar relatório e limpar a busca
-    botao_gerar_relatorio = tk.Button(janela_principal, text="Gerar Relatório", command=gerar_relatorio_callback)
-    botao_gerar_relatorio.pack()
-
-    botao_nova_busca = tk.Button(janela_principal, text="Nova Busca", command=nova_busca)
-    botao_nova_busca.pack()
+    # Botão para nova pesquisa
+    botao_nova_pesquisa = tk.Button(janela_principal, text="Nova Pesquisa", command=nova_pesquisa)
+    botao_nova_pesquisa.pack()
 
     janela_principal.mainloop()
+
+if __name__ == "__main__":
+    consolidar_planilhas_interface()
