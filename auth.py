@@ -12,7 +12,13 @@ RESOURCE = os.getenv('RESOURCE')
 SITE_URL=os.getenv('SITE_URL')  
 
 def obter_token_sharepoint():
-    """Obtém um token de autenticação do SharePoint usando credenciais de cliente."""
+    
+    """Obtém um token de autenticação do SharePoint usando credenciais de cliente.
+
+    Retorna:
+        str: O token de acesso do SharePoint ou None se a operação falhar.
+    """
+    
     url = f"https://accounts.accesscontrol.windows.net/{TENANT_ID}/tokens/OAuth/2"
     
     payload = {
@@ -28,7 +34,7 @@ def obter_token_sharepoint():
         return response.json()['access_token']
     except requests.exceptions.RequestException as e:
         print(f"Erro ao obter token: {e}")
-        return None
+        raise Exception("Falha ao obter o token de autenticação.")  # Lança uma exceção
 
 def buscar_listas_sharepoint(token):
     """Busca listas no SharePoint usando o token de autenticação."""
@@ -52,10 +58,16 @@ def buscar_listas_sharepoint(token):
         print(f"Erro ao buscar listas: {e}")
         return None
 
+def buscar_arquivos_pasta(caminho_pasta, token):
+    """Busca arquivos em uma pasta específica no SharePoint.
 
+    Args:
+        token (str): O token de acesso para autenticação.
+        caminho_pasta (str): O caminho da pasta no SharePoint.
 
-def buscar_arquivos_pasta(token, caminho_pasta):
-    """Busca arquivos em uma pasta específica no SharePoint."""
+    Returns:
+        dict: A resposta JSON contendo os arquivos na pasta ou None se a operação falhar.
+    """
     url = f"https://weg365.sharepoint.com/_api/web/GetFolderByServerRelativeUrl('{caminho_pasta}')/Files"
     
     headers = {
@@ -66,23 +78,29 @@ def buscar_arquivos_pasta(token, caminho_pasta):
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        return response.json()
+        return response.json()  # Retorna a resposta JSON com os arquivos
     except requests.exceptions.RequestException as e:
-        print(f"Erro ao buscar arquivos: {response.status_code} - {response.text}")
+        print(f"Erro ao buscar arquivos: {e}")
         return None
 
-def enviar_para_sharepoint(caminho_arquivo, access_token, nome_destino):
+def enviar_para_sharepoint(access_token, conteudo_arquivo, nome_destino):
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Accept': 'application/json;odata=verbose',
-        'Content-Type': 'application/json;odata=verbose'
+        'Content-Type': 'application/octet-stream'  # Use 'application/octet-stream' para enviar arquivos binários
     }
-    
-    with open(caminho_arquivo, 'rb') as file:
-        arquivo_conteudo = file.read()
 
+    # Se conteudo_arquivo for uma string, significa que é um caminho de arquivo
+    if isinstance(conteudo_arquivo, str):
+        with open(conteudo_arquivo, 'rb') as file:
+            arquivo_conteudo = file.read()
+    else:
+        # Assumindo que conteudo_arquivo é um objeto BytesIO
+        arquivo_conteudo = conteudo_arquivo.getvalue()
+
+    # Endpoint para upload
     endpoint = f"{SITE_URL}/_api/web/GetFolderByServerRelativeUrl('/teams/BR-TI-TIN/DEV_AlocacaoRecursos/TIN%20-%20Detalhamento%20Atividades/Consolidado')/Files/add(url='{nome_destino}',overwrite=true)"
-
+    
     response = requests.post(endpoint, headers=headers, data=arquivo_conteudo)
 
     if response.status_code == 200:
@@ -90,16 +108,3 @@ def enviar_para_sharepoint(caminho_arquivo, access_token, nome_destino):
     else:
         print("Erro ao enviar o arquivo:", response.json())
 
-
-# if __name__ == "__main__":
-#     token = obter_token_sharepoint()
-#     # print(token)
-#     if token:
-#         listas = buscar_listas_sharepoint(token)
-#         print(listas)
-#         if listas:
-#             ...
-#         else:
-#             print("Nenhuma lista foi obtida.")
-#     else:
-#         print("Falha na obtenção do token.")

@@ -7,15 +7,13 @@ from consolidar import (
     consolidar_horas_backlog_sharepoint,
 )
 
+token = obter_token_sharepoint()
+
 def consolidar_planilhas_interface():
     arquivos_selecionados = []
 
     def selecionar_arquivos():
-        token = obter_token_sharepoint()
-        if not token:
-            messagebox.showerror("Erro", "Não foi possível obter o token de acesso ao SharePoint.")
-            return
-
+        
         # Obtenha a lista de arquivos do SharePoint
         listas = buscar_listas_sharepoint(token)
         if not listas or 'd' not in listas or 'results' not in listas['d']:
@@ -39,28 +37,27 @@ def consolidar_planilhas_interface():
             messagebox.showinfo("Seleção de Arquivos", "Nenhum arquivo selecionado.")
 
     def consolidar_abas():
-        print("Arquivos selecionados para consolidação:", arquivos_selecionados)  # Adicionando depuração
+        print("consolidar_abas() no app.py")
         if arquivos_selecionados:
             caminho_das_planilhas = [arquivo['ServerRelativeUrl'] for arquivo in arquivos_selecionados]
-            consolidar_planilhas_sharepoint(caminho_das_planilhas)
+            consolidar_planilhas_sharepoint(caminho_das_planilhas, token)  # Passe o token
             messagebox.showinfo("Sucesso", "Consolidação das abas (exceto Backlog) realizada com sucesso!")
         else:
             messagebox.showwarning("Atenção", "Nenhum arquivo foi selecionado.")
 
     def consolidar_backlog():
-        print("Arquivos selecionados para consolidação de Backlog:", arquivos_selecionados)  # Adicionando depuração
         if arquivos_selecionados:
             caminho_das_planilhas = [arquivo['ServerRelativeUrl'] for arquivo in arquivos_selecionados]
-            consolidar_aba_backlog_sharepoint(caminho_das_planilhas)
+            consolidar_aba_backlog_sharepoint(caminho_das_planilhas, token)  # Passe o token
             messagebox.showinfo("Sucesso", "Consolidação das abas Backlog realizada com sucesso!")
         else:
             messagebox.showwarning("Atenção", "Nenhum arquivo foi selecionado.")
 
+
     def consolidar_horas_backlog():
-        print("Arquivos selecionados para consolidação de Horas Backlog:", arquivos_selecionados)  # Adicionando depuração
         if arquivos_selecionados:
             caminho_das_planilhas = [arquivo['ServerRelativeUrl'] for arquivo in arquivos_selecionados]
-            consolidar_horas_backlog_sharepoint(caminho_das_planilhas)
+            consolidar_horas_backlog_sharepoint(caminho_das_planilhas, token)  # Passe o token
             messagebox.showinfo("Sucesso", "Consolidação das horas Backlog realizada com sucesso!")
         else:
             messagebox.showwarning("Atenção", "Nenhum arquivo foi selecionado.")
