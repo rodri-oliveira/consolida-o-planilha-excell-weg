@@ -9,6 +9,7 @@ CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 TENANT_ID = os.getenv('TENANT_ID')
 RESOURCE = os.getenv('RESOURCE')
+SITE_URL=os.getenv('SITE_URL')  
 
 def obter_token_sharepoint():
     """Obtém um token de autenticação do SharePoint usando credenciais de cliente."""
@@ -70,7 +71,7 @@ def buscar_arquivos_pasta(token, caminho_pasta):
         print(f"Erro ao buscar arquivos: {response.status_code} - {response.text}")
         return None
 
-def enviar_para_sharepoint(caminho_arquivo, site_url, access_token, nome_destino):
+def enviar_para_sharepoint(caminho_arquivo, access_token, nome_destino):
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Accept': 'application/json;odata=verbose',
@@ -80,7 +81,7 @@ def enviar_para_sharepoint(caminho_arquivo, site_url, access_token, nome_destino
     with open(caminho_arquivo, 'rb') as file:
         arquivo_conteudo = file.read()
 
-    endpoint = f"{site_url}/_api/web/GetFolderByServerRelativeUrl('/sites/seu_site/Documentos')/Files/add(url='{nome_destino}',overwrite=true)"
+    endpoint = f"{SITE_URL}/_api/web/GetFolderByServerRelativeUrl('/teams/BR-TI-TIN/DEV_AlocacaoRecursos/TIN%20-%20Detalhamento%20Atividades/Consolidado')/Files/add(url='{nome_destino}',overwrite=true)"
 
     response = requests.post(endpoint, headers=headers, data=arquivo_conteudo)
 

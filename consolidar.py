@@ -2,22 +2,31 @@ import requests
 import os
 import pandas as pd
 from io import BytesIO
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SITE_URL = os.getenv('SITE_URL')
 
 # Função para fazer upload do arquivo para SharePoint
-def upload_arquivo_sharepoint(token, caminho_arquivo, nome_arquivo, url_diretorio):
+def enviar_para_sharepoint(caminho_arquivo, access_token, nome_destino):
     headers = {
-        'Authorization': f'Bearer {token}',
+        'Authorization': f'Bearer {access_token}',
         'Accept': 'application/json;odata=verbose',
-        'Content-Type': 'application/octet-stream'
+        'Content-Type': 'application/json;odata=verbose'
     }
+    
+    with open(caminho_arquivo, 'rb') as file:
+        arquivo_conteudo = file.read()
 
-    with open(caminho_arquivo, 'rb') as arquivo:
-        response = requests.put(url_diretorio + f"/{nome_arquivo}:/content", headers=headers, data=arquivo)
+    endpoint = f"{SITE_URL}/_api/web/GetFolderByServerRelativeUrl('/teams/BR-TI-TIN/DEV_AlocacaoRecursos/TIN%20-%20Detalhamento%20Atividades/Consolidado')/Files/add(url='{nome_destino}',overwrite=true)"
 
-    if response.status_code == 201:
-        print(f"Arquivo '{nome_arquivo}' enviado com sucesso para o SharePoint.")
+    response = requests.post(endpoint, headers=headers, data=arquivo_conteudo)
+
+    if response.status_code == 200:
+        print("Arquivo enviado com sucesso para o SharePoint.")
     else:
-        print(f"Erro ao enviar arquivo '{nome_arquivo}': {response.text}")
+        print("Erro ao enviar o arquivo:", response.json())
 
 # Função para obter o token do SharePoint
 def obter_token_sharepoint():
@@ -66,10 +75,16 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint):
     # Loop para percorrer todos os arquivos no SharePoint
     for url_arquivo in lista_arquivos_sharepoint:
         print(f"Processando arquivo: {url_arquivo}")
-        arquivo_excel = baixar_arquivo_sharepoint(url_arquivo, token)
         
-        if not arquivo_excel:
+        # Usa requests para acessar diretamente o arquivo no SharePoint
+        response = requests.get(url_arquivo, headers={'Authorization': f'Bearer {token}'})
+        
+        if response.status_code != 200:
+            print(f"Erro ao acessar arquivo: {url_arquivo} - {response.status_code}")
             continue
+        
+        # Usa o conteúdo diretamente, sem baixar
+        arquivo_excel = BytesIO(response.content)  # Lê o conteúdo da resposta no formato Excel
         
         xls = pd.ExcelFile(arquivo_excel)
         
@@ -132,12 +147,14 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint):
 
     # Consolida os dados em um DataFrame
     if lista_dfs:
+        # Consolida os dados em um DataFrame
         dataframe_consolidado = pd.DataFrame(lista_dfs)
         dataframe_consolidado.drop(columns=['Horas disponíveis', 'Total de esforço'], inplace=True, errors='ignore')
 
-        caminho_para_salvar_arquivo = 'C:/consolida-o-planilha-excell-weg/planilhas-consolidada/planilha_consolidada.xlsx'
-        os.makedirs(os.path.dirname(caminho_para_salvar_arquivo), exist_ok=True)
-        dataframe_consolidado.to_excel(caminho_para_salvar_arquivo, index=False)
+        # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
+        arquivo_memoria = BytesIO()
+        dataframe_consolidado.to_excel(arquivo_memoria, index=False, engine='openpyxl')
+        arquivo_memoria.seek(0)  # Move o ponteiro de volta ao início do arquivo
 
         # URL do diretório no SharePoint onde você deseja salvar o arquivo
         url_diretorio_sharepoint = "https://weg365.sharepoint.com/sites/BR-TI-TIN/DEV_AlocacaoRecursos/Consolidado"
@@ -145,10 +162,14 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint):
         # Nome do arquivo a ser salvo no SharePoint
         nome_arquivo_sharepoint = "planilha_consolidada.xlsx"
 
-        # Faz o upload do arquivo para o SharePoint
-        upload_arquivo_sharepoint(token, caminho_para_salvar_arquivo, nome_arquivo_sharepoint, url_diretorio_sharepoint)
+        try:
+            # Faz o upload do arquivo diretamente da memória para o SharePoint
+            enviar_para_sharepoint(token, arquivo_memoria, nome_arquivo_sharepoint, url_diretorio_sharepoint)
+        except Exception as e:
+            print(f"Erro ao enviar o arquivo '{nome_arquivo_sharepoint}' para o SharePoint: {str(e)}")
     else:
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
+
 
 # Função principal para consolidar a aba "Backlog" e enviar para o SharePoint
 def consolidar_aba_backlog_sharepoint(lista_arquivos_sharepoint):
@@ -170,24 +191,62 @@ def consolidar_aba_backlog_sharepoint(lista_arquivos_sharepoint):
             continue
         
         xls = pd.ExcelFile(arquivo_excel)
-        
-        for nome_aba in xls.sheet_names:
-            if 'Backlog' not in nome_aba:
-                continue
-            
-            df = pd.read_excel(xls, sheet_name=nome_aba)
-            
-            # Verifica se a aba tem as colunas mínimas necessárias
-            if 'Backlog' in df.columns and df.shape[1] > 5:
-                for index, row in df.iterrows():
-                    if index < 3:  # Ignora as primeiras linhas
-                        continue
-                    
-                    # Continue a mesma lógica como nas outras funções...
 
-# Chame a função principal conforme necessário
-# lista_arquivos = ['url_do_arquivo_1', 'url_do_arquivo_2', ...]
-# consolidar_planilhas_sharepoint(lista_arquivos)
+        # Processa a aba "Backlog"
+        for nome_aba in xls.sheet_names:
+            if 'Backlog' in nome_aba:
+                print(f"Processando aba: '{nome_aba}'")
+
+                # Lê a aba "Backlog" como DataFrame
+                df = pd.read_excel(xls, sheet_name=nome_aba)
+
+                if 'Estimated effort' in df.columns and df.shape[1] > 5:
+                    valor_secao = df.iloc[3, 0]
+                    valor_equipe = df.iloc[4, 0]
+
+                    for index, row in df.iterrows():
+                        if index < 5:
+                            continue
+
+                        epic = row['Epic'] if 'Epic' in df.columns else ''
+                        status = row['Status'] if 'Status' in df.columns else ''
+                        due_date = row['Due Date'] if 'Due Date' in df.columns else ''
+                        estimated_effort = row['Estimated effort']
+
+                        nova_linha = {
+                            'Epic': epic,
+                            'Status': status,
+                            'Due Date': due_date,
+                            'Assignee': row['Assignee'] if 'Assignee' in df.columns else '',
+                            'Estimated Effort': estimated_effort,
+                            'Seção': valor_secao,
+                            'Equipe': valor_equipe
+                        }
+                        lista_dfs.append(nova_linha)
+
+    if lista_dfs:
+        dataframe_consolidado = pd.DataFrame(lista_dfs)
+        dataframe_consolidado.drop(columns=['Horas disponíveis', 'Total de esforço'], inplace=True, errors='ignore')
+        dataframe_consolidado = dataframe_consolidado[dataframe_consolidado.iloc[:, 0].notna()]
+
+        # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
+        arquivo_memoria = BytesIO()
+        dataframe_consolidado.to_excel(arquivo_memoria, index=False, engine='openpyxl')
+        arquivo_memoria.seek(0)  # Move o ponteiro de volta ao início do arquivo
+
+        # URL do diretório no SharePoint onde você deseja salvar o arquivo
+        url_diretorio_sharepoint = "https://weg365.sharepoint.com/sites/BR-TI-TIN/DEV_AlocacaoRecursos/Consolidado"
+        
+        # Nome do arquivo a ser salvo no SharePoint
+        nome_arquivo_sharepoint = "backlog_consolidado.xlsx"
+
+        try:
+            # Faz o upload do arquivo diretamente da memória para o SharePoint
+            enviar_para_sharepoint(token, arquivo_memoria, nome_arquivo_sharepoint, url_diretorio_sharepoint)
+        except Exception as e:
+            print(f"Erro ao enviar o arquivo '{nome_arquivo_sharepoint}' para o SharePoint: {str(e)}")
+    else:
+        print("Nenhuma aba 'Backlog' foi consolidada. Verifique os arquivos de entrada.")
 
 def consolidar_horas_backlog_sharepoint(lista_arquivos_sharepoint):
     """Consolida os dados das abas 'Backlog' de todos os arquivos Excel no SharePoint."""
@@ -240,14 +299,23 @@ def consolidar_horas_backlog_sharepoint(lista_arquivos_sharepoint):
     if lista_dfs:
         dataframe_consolidado = pd.DataFrame(lista_dfs)
 
-        # Faz o upload do DataFrame consolidado diretamente para o SharePoint
-        caminho_para_salvar_arquivo = 'planilha_consolidada_backlog_horas.xlsx'
+        # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
+        arquivo_memoria = BytesIO()
+        dataframe_consolidado.to_excel(arquivo_memoria, index=False, engine='openpyxl')
+        arquivo_memoria.seek(0)  # Move o ponteiro de volta ao início do arquivo
+
+        # URL do diretório no SharePoint onde você deseja salvar o arquivo
         url_diretorio_sharepoint = "https://weg365.sharepoint.com/sites/BR-TI-TIN/DEV_AlocacaoRecursos/Consolidado"
         
-        # Faz o upload da planilha consolidada para o SharePoint
-        upload_arquivo_sharepoint(token, caminho_para_salvar_arquivo, caminho_para_salvar_arquivo, url_diretorio_sharepoint)
-        
-        print(f"Relatório consolidado enviado para o SharePoint com sucesso.")
+        # Nome do arquivo a ser salvo no SharePoint
+        nome_arquivo_sharepoint = "planilha_consolidada_backlog_horas.xlsx"
+
+        try:
+            # Faz o upload do DataFrame consolidado diretamente para o SharePoint
+            enviar_para_sharepoint(token, arquivo_memoria, nome_arquivo_sharepoint, url_diretorio_sharepoint)
+            print(f"Relatório consolidado enviado para o SharePoint com sucesso.")
+        except Exception as e:
+            print(f"Erro ao enviar o arquivo '{nome_arquivo_sharepoint}' para o SharePoint: {str(e)}")
     else:
         print("Nenhuma aba 'Backlog' foi encontrada para consolidar.")
 
