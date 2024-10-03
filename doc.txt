@@ -1,0 +1,58 @@
+def selecionar_arquivos():
+    # Obtém o token de autenticação do SharePoint
+    token = obter_token_sharepoint()
+    if not token:
+        # Exibe um erro se não for possível obter o token
+        messagebox.showerror("Erro", "Não foi possível obter o token de acesso ao SharePoint.")
+        return
+
+    # Busca as listas de arquivos no SharePoint usando o token de acesso
+    listas = buscar_listas_sharepoint(token)
+    if not listas or 'd' not in listas or 'results' not in listas['d']:
+        # Exibe um erro se não for possível buscar os arquivos no SharePoint
+        messagebox.showerror("Erro", "Não foi possível buscar os arquivos do SharePoint.")
+        return
+
+    # Obtém todos os arquivos disponíveis (sem filtro)
+    arquivos_disponiveis = listas['d']['results']
+
+    if not arquivos_disponiveis:
+        # Exibe uma mensagem se não houver arquivos disponíveis
+        messagebox.showinfo("Seleção de Arquivos", "Nenhum arquivo foi encontrado na pasta do SharePoint.")
+        return
+
+    # Função para confirmar a seleção de arquivos
+    def confirmar_selecao():
+        # Obter os índices dos arquivos selecionados no Listbox
+        selecionados_indices = listbox.curselection()
+        arquivos_selecionados.clear()  # Limpa a lista de arquivos selecionados anteriormente
+        for indice in selecionados_indices:
+            # Adiciona os arquivos selecionados à lista arquivos_selecionados
+            arquivos_selecionados.append(arquivos_disponiveis[indice])
+
+        if arquivos_selecionados:
+            # Exibe uma mensagem informando que os arquivos foram selecionados com sucesso
+            messagebox.showinfo("Seleção de Arquivos", "Arquivos selecionados com sucesso!")
+        else:
+            # Exibe uma mensagem informando que nenhum arquivo foi selecionado
+            messagebox.showinfo("Seleção de Arquivos", "Nenhum arquivo selecionado.")
+        
+        # Fecha a janela de seleção de arquivos
+        janela_selecao.destroy()
+
+    # Cria uma nova janela para exibir a lista de arquivos disponíveis
+    janela_selecao = Toplevel()
+    janela_selecao.title("Selecionar Arquivos do SharePoint")  # Define o título da janela
+
+    # Cria um Listbox (caixa de lista) para permitir a seleção múltipla de arquivos
+    listbox = Listbox(janela_selecao, selectmode=EXTENDED)
+    for arquivo in arquivos_disponiveis:
+        # Insere os nomes dos arquivos no Listbox
+        listbox.insert(tk.END, arquivo['Name'])
+    listbox.pack()  # Exibe o Listbox na janela
+
+    # Cria um botão para confirmar a seleção dos arquivos
+    btn_confirmar = Button(janela_selecao, text="Confirmar Seleção", command=confirmar_selecao)
+    btn_confirmar.pack()  # Exibe o botão na janela
+
+    janela_selecao.mainloop()  # Mantém a janela aberta até que seja fechada
