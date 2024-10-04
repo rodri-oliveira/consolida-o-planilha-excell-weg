@@ -99,7 +99,7 @@ def enviar_para_sharepoint(access_token, conteudo_arquivo, nome_destino):
         arquivo_conteudo = conteudo_arquivo.getvalue()
 
     # Endpoint para upload
-    endpoint = f"https://weg365.sharepoint.com/_api/web/GetFolderByServerRelativeUrl('/teams/BR-TI-TIN/DEV_AlocacaoRecursos/TIN%20-%20Detalhamento%20Atividades/Consolidado')/Files/add(url='{nome_destino}',overwrite=true)"
+    endpoint = f"{SITE_URL}/_api/web/GetFolderByServerRelativeUrl('/teams/BR-TI-TIN/DEV_AlocacaoRecursos/TIN%20-%20Detalhamento%20Atividades/Consolidado')/Files/add(url='{nome_destino}',overwrite=true)"
     
     response = requests.post(endpoint, headers=headers, data=arquivo_conteudo)
 
@@ -107,4 +107,3 @@ def enviar_para_sharepoint(access_token, conteudo_arquivo, nome_destino):
         print("Arquivo enviado com sucesso para o SharePoint.")
     else:
         print("Erro ao enviar o arquivo:", response.json())
-

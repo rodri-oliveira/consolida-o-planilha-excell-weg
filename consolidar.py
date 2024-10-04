@@ -311,6 +311,3 @@ def consolidar_horas_backlog_sharepoint(lista_arquivos_sharepoint, token):
             print(f"Erro ao enviar o arquivo '{nome_arquivo_sharepoint}' para o SharePoint: {str(e)}")
     else:
         print("Nenhuma aba 'Backlog' foi encontrada para consolidar.")
-
-
-
