@@ -9,33 +9,6 @@ load_dotenv()
 token = obter_token_sharepoint()
 SITE_URL = os.getenv('SITE_URL')
 
-
-
-# Função para baixar arquivos do SharePoint
-# consolidar.py
-
-import requests
-
-def baixar_arquivo_sharepoint(url_arquivo, token):
-    """Baixa um arquivo do SharePoint usando o URL do arquivo e o token de autenticação."""
-    
-    # Adiciona o esquema e domínio ao URL se necessário
-    if not url_arquivo.startswith("http://") and not url_arquivo.startswith("https://"):
-        url_arquivo = f"https://weg365.sharepoint.com{url_arquivo}"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/json;odata=verbose"
-    }
-    
-    try:
-        response = requests.get(url_arquivo, headers=headers)
-        response.raise_for_status()  # Isso irá levantar uma exceção para códigos de status HTTP de erro
-        return response.content  # Retorna o conteúdo do arquivo
-    except requests.exceptions.RequestException as e:
-        print(f"Erro ao baixar arquivo: {e}")
-        raise  # Re-lança a exceção para que possa ser tratada no chamador
-
-
 # Função principal para consolidar planilhas do SharePoint
 def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
     
