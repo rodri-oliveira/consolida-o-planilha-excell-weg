@@ -101,3 +101,5 @@ def consolidar_planilhas_interface():
     botao_nova_pesquisa.pack()
 
     janela_principal.mainloop()
+    
+ 
