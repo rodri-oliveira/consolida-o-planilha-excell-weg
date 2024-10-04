@@ -22,17 +22,22 @@ def consolidar_planilhas_interface():
         arquivos_disponiveis = listas['d']['results']
         arquivos_selecionados.clear()
 
-        for arquivo in arquivos_disponiveis:
+        arquivos_com_prefixo = [arquivo for arquivo in arquivos_disponiveis if arquivo['Name'].startswith(prefixo)]
+
+        if not arquivos_com_prefixo:
+            messagebox.showinfo("Seleção de Arquivos", f"Nenhum arquivo encontrado com o prefixo {prefixo}.")
+            return
+
+        for arquivo in arquivos_com_prefixo:
             nome_arquivo = arquivo['Name']
-            if nome_arquivo.startswith(prefixo):  # Verifica se o nome do arquivo começa com o prefixo
-                incluir = messagebox.askyesno("Seleção de Arquivos", f"Incluir o arquivo {nome_arquivo} na consolidação?")
-                if incluir:
-                    arquivos_selecionados.append(arquivo)
+            incluir = messagebox.askyesno("Seleção de Arquivos", f"Incluir o arquivo {nome_arquivo} na consolidação?")
+            if incluir:
+                arquivos_selecionados.append(arquivo)
 
         if arquivos_selecionados:
             messagebox.showinfo("Seleção de Arquivos", f"Arquivos que começam com {prefixo} selecionados com sucesso!")
         else:
-            messagebox.showinfo("Seleção de Arquivos", "Nenhum arquivo selecionado.")
+            messagebox.showinfo("Seleção de Arquivos", "Nenhum arquivo foi selecionado para consolidação.")
 
     # Criação da janela principal
     janela_principal = tk.Tk()
