@@ -43,7 +43,7 @@ def consolidar_planilhas_interface():
     janela_principal = tk.Tk()
     janela_principal.title("Consolidar Planilhas do SharePoint")
 
-    tipo_selecao = tk.StringVar(value="TIN")  # Valor padrão para o botão de rádio
+    tipo_selecao = tk.StringVar(value="none")  # Valor padrão para o botão de rádio
     opcoes_consolidacao = {
         "Alocação": tk.BooleanVar(value=False),
         "Backlog": tk.BooleanVar(value=False),
