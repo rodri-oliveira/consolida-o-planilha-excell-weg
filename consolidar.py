@@ -104,23 +104,22 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
         dataframe_consolidado.drop(columns=['Horas disponíveis', 'Total de esforço'], inplace=True, errors='ignore')
 
         # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
+        # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
         arquivo_memoria = BytesIO()
-        dataframe_consolidado.to_excel(arquivo_memoria, index=False, engine='openpyxl')
+        dataframe_consolidado.to_csv(arquivo_memoria, index=False)  # Mudança aqui para salvar como CSV
         arquivo_memoria.seek(0)  # Move o ponteiro de volta ao início do arquivo
 
-        # URL do diretório no SharePoint onde você deseja salvar o arquivo
-        url_diretorio_sharepoint = "https://weg365.sharepoint.com/sites/BR-TI-TIN/DEV_AlocacaoRecursos/Consolidado"
-        
         # Nome do arquivo a ser salvo no SharePoint
-        nome_arquivo_sharepoint = "planilha_consolidada.xlsx"
+        nome_arquivo_sharepoint = "planilha_consolidada.csv"  # Mudança aqui para .csv
 
         try:
             # Faz o upload do arquivo diretamente da memória para o SharePoint
-            enviar_para_sharepoint(token,arquivo_memoria,nome_arquivo_sharepoint)
+            enviar_para_sharepoint(token, arquivo_memoria, nome_arquivo_sharepoint)
         except Exception as e:
             print(f"Erro ao enviar o arquivo '{nome_arquivo_sharepoint}' para o SharePoint: {str(e)}")
     else:
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
+
 
 # Função principal para consolidar a aba "Backlog" e enviar para o SharePoint
 def consolidar_aba_backlog_sharepoint(lista_arquivos_sharepoint, token):
@@ -200,9 +199,12 @@ def consolidar_aba_backlog_sharepoint(lista_arquivos_sharepoint, token):
         nome_arquivo_sharepoint = "backlog_consolidado.xlsx"
         
         # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
+        # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
         arquivo_memoria = BytesIO()
-        dataframe_consolidado.to_excel(arquivo_memoria, index=False, engine='openpyxl')
+        dataframe_consolidado.to_csv(arquivo_memoria, index=False)  # Mudança aqui para salvar como CSV
         arquivo_memoria.seek(0)  # Move o ponteiro de volta ao início do arquivo
+
+        nome_arquivo_sharepoint = "backlog_consolidado.csv"  # Mudança aqui para .csv
 
         try:
             # Faz o upload do arquivo diretamente da memória para o SharePoint
@@ -210,6 +212,7 @@ def consolidar_aba_backlog_sharepoint(lista_arquivos_sharepoint, token):
             print(f"Relatório consolidado salvo em: {url_diretorio_sharepoint}/{nome_arquivo_sharepoint}")
         except Exception as e:
             print(f"Erro ao enviar o arquivo '{nome_arquivo_sharepoint}' para o SharePoint: {str(e)}")
+
     else:
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
 def consolidar_horas_backlog_sharepoint(lista_arquivos_sharepoint, token):
@@ -272,9 +275,12 @@ def consolidar_horas_backlog_sharepoint(lista_arquivos_sharepoint, token):
         nome_arquivo_sharepoint = "consolidada-backlog-horas.xlsx"
         
         # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
+        # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
         arquivo_memoria = BytesIO()
-        dataframe_consolidado.to_excel(arquivo_memoria, index=False, engine='openpyxl')
+        dataframe_consolidado.to_csv(arquivo_memoria, index=False)  # Mudança aqui para salvar como CSV
         arquivo_memoria.seek(0)  # Move o ponteiro de volta ao início do arquivo
+
+        nome_arquivo_sharepoint = "consolidada-backlog-horas.csv"  # Mudança aqui para .csv
 
         try:
             # Faz o upload do arquivo diretamente da memória para o SharePoint
@@ -282,5 +288,6 @@ def consolidar_horas_backlog_sharepoint(lista_arquivos_sharepoint, token):
             print(f"Relatório consolidado salvo em: {url_diretorio_sharepoint}/{nome_arquivo_sharepoint}")
         except Exception as e:
             print(f"Erro ao enviar o arquivo '{nome_arquivo_sharepoint}' para o SharePoint: {str(e)}")
+
     else:
         print("Nenhuma aba 'Backlog' foi encontrada para consolidar.")
