@@ -1,17 +1,27 @@
-import requests
 import os
 import pandas as pd
 import unidecode
 from io import BytesIO
 from auth import enviar_para_sharepoint, obter_token_sharepoint, buscar_arquivos_pasta
 from dotenv import load_dotenv
+import requests
+import pandas as pd
+from io import BytesIO
+import csv
 
 load_dotenv()
 token = obter_token_sharepoint()
 SITE_URL = os.getenv('SITE_URL')
 
+def limpar_string(s):
+    """Remove caracteres especiais de uma string, permitindo apenas alfanuméricos, espaços, sublinhados e hifens."""
+    # Verifica se 's' é uma string
+    if isinstance(s, str):
+        return ''.join(e for e in s if e.isalnum() or e in [' ', '_', '-'])
+    return ''  # Retorna uma string vazia se 's' não for uma string
+
+
 # Função principal para consolidar planilhas do SharePoint
-import unidecode
 
 def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
     """Consolida todas as planilhas dos arquivos Excel do SharePoint, ignorando a aba 'Backlog'.
@@ -62,9 +72,9 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
                     if index < 3:  # Ignora as primeiras linhas
                         continue
 
-                    epic = row['Epic'] if 'Epic' in df.columns else ''
-                    status = row['Status'] if 'Status' in df.columns else ''
-                    due_date = row['Due_Date'] if 'Due_Date' in df.columns else ''
+                    epic = limpar_string(row['Epic']) if 'Epic' in df.columns else ''
+                    status = limpar_string(row['Status']) if 'Status' in df.columns else ''
+                    due_date = limpar_string(row['Due_Date']) if 'Due_Date' in df.columns else ''
                     planned_effort = row['Planned_effort']
                     estimate_effort = row.iloc[5] if len(row) > 5 else None
 
@@ -88,7 +98,7 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
                                 'Epic': epic,
                                 'Status': status,
                                 'Due_Date': due_date,
-                                'Assignee': row['Assignee'] if 'Assignee' in df.columns else '',
+                                'Assignee': limpar_string(row['Assignee']) if 'Assignee' in df.columns else '',
                                 'Planned_Effort': planned_effort,
                                 'Estimate_Effort': estimate_effort,
                                 'MES': mes_abreviado,
@@ -109,7 +119,7 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
 
         # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
         arquivo_memoria = BytesIO()
-        dataframe_consolidado.to_csv(arquivo_memoria, index=False)  # Mudança aqui para salvar como CSV
+        dataframe_consolidado.to_csv(arquivo_memoria, index=False, quoting=csv.QUOTE_NONE)  # Salva como CSV sem aspas
         arquivo_memoria.seek(0)
 
         # Nome do arquivo a ser salvo no SharePoint
@@ -124,9 +134,6 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
 
 # Função principal para consolidar a aba "Backlog" e enviar para o SharePoint
-import unidecode
-
-import unidecode
 
 def consolidar_aba_backlog_sharepoint(lista_arquivos_sharepoint, token):
     """Consolida as planilhas da aba 'Backlog' de todos os arquivos Excel no SharePoint."""
@@ -176,9 +183,9 @@ def consolidar_aba_backlog_sharepoint(lista_arquivos_sharepoint, token):
                             continue
 
                         # Captura os dados relevantes
-                        epic = row['Epic'] if 'Epic' in df.columns else ''
-                        status = row['Status'] if 'Status' in df.columns else ''
-                        due_date = row['Due_Date'] if 'Due_Date' in df.columns else ''
+                        epic = limpar_string(row['Epic']) if 'Epic' in df.columns else ''
+                        status = limpar_string(row['Status']) if 'Status' in df.columns else ''
+                        due_date = limpar_string(row['Due_Date']) if 'Due_Date' in df.columns else ''
                         estimated_effort = row['Estimated_effort']  # Valor da coluna Estimated effort
 
                         # Cria a nova linha para o DataFrame consolidado
@@ -186,7 +193,7 @@ def consolidar_aba_backlog_sharepoint(lista_arquivos_sharepoint, token):
                             'Epic': epic,
                             'Status': status,
                             'Due_Date': due_date,
-                            'Assignee': row['Assignee'] if 'Assignee' in df.columns else '',
+                            'Assignee': limpar_string(row['Assignee']) if 'Assignee' in df.columns else '',
                             'Estimated_Effort': estimated_effort,
                             'Secao': valor_secao,    # Adiciona o valor da Seção
                             'Equipe': valor_equipe   # Adiciona o valor da Equipe
@@ -205,14 +212,12 @@ def consolidar_aba_backlog_sharepoint(lista_arquivos_sharepoint, token):
 
         # Define o caminho para salvar a planilha consolidada
         url_diretorio_sharepoint = "https://weg365.sharepoint.com/sites/BR-TI-TIN/DEV_AlocacaoRecursos/Consolidado"
-        nome_arquivo_sharepoint = "backlog_consolidado.xlsx"
-        
+        nome_arquivo_sharepoint = "backlog_consolidado.csv"  # Mudança aqui para .csv
+
         # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
         arquivo_memoria = BytesIO()
-        dataframe_consolidado.to_csv(arquivo_memoria, index=False)  # Mudança aqui para salvar como CSV
+        dataframe_consolidado.to_csv(arquivo_memoria, index=False, quoting=csv.QUOTE_NONE)  # Salva como CSV sem aspas
         arquivo_memoria.seek(0)  # Move o ponteiro de volta ao início do arquivo
-
-        nome_arquivo_sharepoint = "backlog_consolidado.csv"  # Mudança aqui para .csv
 
         try:
             # Faz o upload do arquivo diretamente da memória para o SharePoint
@@ -248,7 +253,7 @@ def consolidar_horas_backlog_sharepoint(lista_arquivos_sharepoint, token):
 
         # Processa cada aba do arquivo Excel
         for nome_aba in xls.sheet_names:
-            # Verifica se a aba é "Backlog" e processa apenas ela
+            # Verifica se a aba contém "Backlog" e processa apenas ela
             if 'Backlog' in nome_aba:
                 print(f"Processando aba: '{nome_aba}'")
                 df = pd.read_excel(xls, sheet_name=nome_aba)
@@ -259,11 +264,12 @@ def consolidar_horas_backlog_sharepoint(lista_arquivos_sharepoint, token):
                 # Itera pelas linhas de "Epic" e gera os dados de "Hora_mes"
                 for index, row in df.iterrows():
                     # Pega o valor do Epic (coluna A), Planned effort (coluna G), e Hora_mes (colunas H a S)
-                    epic = row.iloc[0]  # Valor da coluna A (Epic) usando iloc
-                    planned_effort = row.iloc[6]  # Valor da coluna G (Planned effort) usando iloc
+                    epic = limpar_string(row.iloc[0])  # Valor da coluna A (Epic) usando iloc
+                    planned_effort = row.iloc[6]  # Valor da coluna G (Planned effort)
 
                     # Verifica se há dados nas colunas de H a S (12 meses)
-                    meses = ['Mes_1', 'Mes_2', 'Mes_3', 'Mes_4', 'Mes_5', 'Mes_6', 'Mes_7', 'Mes_8', 'Mes_9', 'Mes_10', 'Mes_11', 'Mes_12']
+                    meses = ['Mes_1', 'Mes_2', 'Mes_3', 'Mes_4', 'Mes_5', 'Mes_6', 
+                             'Mes_7', 'Mes_8', 'Mes_9', 'Mes_10', 'Mes_11', 'Mes_12']
                     horas_mes = row.iloc[7:19]  # Colunas H até S usando iloc
 
                     # Verifica se as células contêm dados válidos
@@ -297,6 +303,5 @@ def consolidar_horas_backlog_sharepoint(lista_arquivos_sharepoint, token):
             print(f"Relatório consolidado salvo em: {url_diretorio_sharepoint}/{nome_arquivo_sharepoint}")
         except Exception as e:
             print(f"Erro ao enviar o arquivo '{nome_arquivo_sharepoint}' para o SharePoint: {str(e)}")
-
     else:
         print("Nenhuma aba 'Backlog' foi encontrada para consolidar.")
