@@ -24,15 +24,7 @@ def limpar_string(s):
 # Função principal para consolidar planilhas do SharePoint
 
 def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
-    """Consolida todas as planilhas dos arquivos Excel do SharePoint, ignorando a aba 'Backlog'.
-    
-    Args:
-        lista_arquivos_sharepoint (list): Lista de URLs dos arquivos no SharePoint.
-        token (str): O token de acesso para autenticação.
-    
-    Returns:
-        None: A função não retorna valor, mas faz o upload do arquivo consolidado para o SharePoint.
-    """
+    """Consolida todas as planilhas dos arquivos Excel do SharePoint, ignorando a aba 'Backlog'."""
     
     lista_dfs = []
     
@@ -67,6 +59,11 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
             if 'Planned_effort' in df.columns and df.shape[1] > 5:
                 valor_secao = df.iloc[3, 0]  # Captura a célula A4
                 valor_equipe = df.iloc[4, 0]  # Captura a célula A5
+                
+                # Captura os valores de G1, G2 e G3
+                valor_gap = df.iloc[0, 6]  # Célula G1
+                valor_horas_disponiveis = df.iloc[1, 6]  # Célula G2
+                valor_total_esforco = df.iloc[2, 6]  # Célula G3
 
                 for index, row in df.iterrows():
                     if index < 3:  # Ignora as primeiras linhas
@@ -105,7 +102,10 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
                                 'ANO': ano,
                                 'Horas_mes': valor_hora_mes,
                                 'Secao': valor_secao,
-                                'Equipe': valor_equipe
+                                'Equipe': valor_equipe,
+                                'GAP': valor_gap,  # Adiciona a coluna GAP
+                                'Horas_disponiveis': valor_horas_disponiveis,  # Adiciona a coluna Horas_disponiveis
+                                'Total_esforco': valor_total_esforco  # Adiciona a coluna Total_esforco
                             }
                             lista_dfs.append(nova_linha)
 
@@ -115,7 +115,6 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
     # Consolida os dados em um DataFrame
     if lista_dfs:
         dataframe_consolidado = pd.DataFrame(lista_dfs)
-        dataframe_consolidado.drop(columns=['Horas_disponiveis', 'Total_de_esforco'], inplace=True, errors='ignore')
 
         # Salva o DataFrame em um objeto de memória (BytesIO), sem salvar localmente
         arquivo_memoria = BytesIO()
@@ -132,6 +131,8 @@ def consolidar_planilhas_sharepoint(lista_arquivos_sharepoint, token):
             print(f"Erro ao enviar o arquivo '{nome_arquivo_sharepoint}' para o SharePoint: {str(e)}")
     else:
         print("Nenhuma planilha foi consolidada. Verifique os arquivos de entrada.")
+
+
 
 # Função principal para consolidar a aba "Backlog" e enviar para o SharePoint
 
